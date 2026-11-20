@@ -128,10 +128,16 @@ input:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
 .dt-label { font-weight: 600; font-size: 0.95rem; }
 .dt-inputs { display: flex; gap: 6px; }
 .dt-inputs input[type="date"] { flex: 1 1 auto; min-width: 0; }
-.time-box { position: relative; display: flex; flex: 0 0 auto; }
-.time-box input { width: 4.6em; text-align: center; font-variant-numeric: tabular-nums; border-top-right-radius: 0; border-bottom-right-radius: 0; }
-.time-box input[aria-invalid="true"] { border-color: var(--red); }
-.roller-toggle { border: 1px solid var(--line); border-left: 0; background: var(--card); border-radius: 0 10px 10px 0; padding: 0 8px; cursor: pointer; }
+/* The time box and its 🕒 button are ONE unit: one shared border, and the blue focus ring goes around both
+   (:focus-within) instead of around the text box alone, where it ran into the button's border (user's feedback). */
+.time-box { position: relative; display: flex; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.time-box:focus-within { outline: 2px solid var(--blue); outline-offset: 1px; }
+.time-box:has(input[aria-invalid="true"]) { border-color: var(--red); }
+.time-box:has(input[aria-invalid="true"]):focus-within { outline-color: var(--red); }
+.time-box input { width: 4.6em; text-align: center; font-variant-numeric: tabular-nums; border: 0; background: transparent; border-radius: 10px 0 0 10px; }
+.time-box input:focus { outline: none; }
+.roller-toggle { border: 0; border-left: 1px solid var(--line); background: transparent; border-radius: 0 10px 10px 0; padding: 0 9px; cursor: pointer; }
+.roller-toggle:focus-visible { outline: none; background: var(--blue-soft); }
 .roller { position: absolute; top: calc(100% + 4px); right: 0; z-index: 20; display: flex; gap: 4px; padding: 6px;
   background: var(--card); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18); }
 .roller.upward { top: auto; bottom: calc(100% + 4px); }
