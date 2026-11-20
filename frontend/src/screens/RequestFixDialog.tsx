@@ -2,20 +2,23 @@ import { useState, type FormEvent } from "react";
 import { api, ApiError, type Shift } from "../api";
 import { buildRequest, fromInput, fromServer, summarizeChange, toInput } from "../requests";
 import { formatDay, formatDelta, formatHM, formatRecordedTime, parseServerTime } from "../time";
+import DateTimeField from "./DateTimeField";
 
 /**
  * An employee asks the manager to fix the times of one FINISHED shift (Plan 13).
  * The typed times are only a suggestion: nothing changes until a manager approves.
  */
 export default function RequestFixDialog({ shift, onClose, onSent }: { shift: Shift; onClose: () => void; onSent: () => void }) {
-  const [clockIn, setClockIn] = useState(toInput(shift.clockIn));
-  const [clockOut, setClockOut] = useState(toInput(shift.clockOut));
+  // null = the date/time field isn't a valid entry yet (e.g. "17:6" while typing): Send stays off.
+  const [clockIn, setClockIn] = useState<string | null>(toInput(shift.clockIn));
+  const [clockOut, setClockOut] = useState<string | null>(toInput(shift.clockOut));
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const body = buildRequest(shift, clockIn, clockOut, reason);
-  const changed = body.clockIn !== undefined || body.clockOut !== undefined;
+  const incomplete = clockIn === null || clockOut === null;
+  const body = buildRequest(shift, clockIn ?? "", clockOut ?? "", reason);
+  const changed = !incomplete && (body.clockIn !== undefined || body.clockOut !== undefined);
 
   // What the change would do (user's idea): the new length, a moved day, over 14 h. Unchanged fields keep the
   // recorded instant (with its seconds), so the length matches what the server will compute.
@@ -50,9 +53,9 @@ export default function RequestFixDialog({ shift, onClose, onSent }: { shift: Sh
         </p>
         <p className="muted small">Change the time that's wrong. Your manager will approve or reject it; until then nothing changes.</p>
 
-        <div className="two-col">
-          <label>Clock In <input type="datetime-local" value={clockIn} onChange={(e) => setClockIn(e.target.value)} required /></label>
-          <label>Clock Out <input type="datetime-local" value={clockOut} onChange={(e) => setClockOut(e.target.value)} required /></label>
+        <div className="dt-stack">
+          <DateTimeField label="Clock In" value={toInput(shift.clockIn)} onChange={setClockIn} required />
+          <DateTimeField label="Clock Out" value={toInput(shift.clockOut)} onChange={setClockOut} required />
         </div>
 
         {summary && (
@@ -94,7 +97,7 @@ export default function RequestFixDialog({ shift, onClose, onSent }: { shift: Sh
         <div className="dialog-actions">
           <button type="button" className="ghost" onClick={onClose}>Cancel</button>
           <button type="submit" className="primary" disabled={busy || !changed || summary?.valid === false}>
-            {busy ? "Sending…" : changed ? "Send request" : "Change a time first"}
+            {busy ? "Sending…" : incomplete ? "Finish the date and time" : changed ? "Send request" : "Change a time first"}
           </button>
         </div>
       </form>

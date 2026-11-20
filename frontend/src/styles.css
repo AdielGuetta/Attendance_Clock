@@ -121,6 +121,27 @@ input:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
 .change-summary .changed, .request-head .changed { background: var(--amber-soft); color: var(--amber); border-radius: 4px; padding: 0 4px; font-weight: 700; }
 .error-text { color: var(--red); }
 .badge.over-limit { background: var(--red-soft); color: var(--red); }
+
+/* Date + 24-hour time field with the hour/minute roller (replaces the browser's AM/PM-prone date-time box) */
+.dt-stack { display: flex; flex-direction: column; gap: 12px; } /* Clock In above Clock Out: side by side doesn't fit */
+.dt-field { display: flex; flex-direction: column; gap: 6px; }
+.dt-label { font-weight: 600; font-size: 0.95rem; }
+.dt-inputs { display: flex; gap: 6px; }
+.dt-inputs input[type="date"] { flex: 1 1 auto; min-width: 0; }
+.time-box { position: relative; display: flex; flex: 0 0 auto; }
+.time-box input { width: 4.6em; text-align: center; font-variant-numeric: tabular-nums; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.time-box input[aria-invalid="true"] { border-color: var(--red); }
+.roller-toggle { border: 1px solid var(--line); border-left: 0; background: var(--card); border-radius: 0 10px 10px 0; padding: 0 8px; cursor: pointer; }
+.roller { position: absolute; top: calc(100% + 4px); right: 0; z-index: 20; display: flex; gap: 4px; padding: 6px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18); }
+.roller.upward { top: auto; bottom: calc(100% + 4px); }
+.roller-col { list-style: none; margin: 0; padding: 0; height: 180px; overflow-y: auto; scroll-snap-type: y proximity; width: 3.2em; }
+.roller-col li { scroll-snap-align: center; }
+.roller-col button { width: 100%; border: 0; background: none; color: var(--ink); padding: 6px 0; border-radius: 6px;
+  font: inherit; font-variant-numeric: tabular-nums; cursor: pointer; }
+.roller-col button:hover { background: var(--bg); }
+.roller-col button.selected { background: var(--blue); color: #fff; font-weight: 700; }
+.field-error { color: var(--red); font-size: 0.85rem; }
 .request-list li.over-limit { border-color: var(--red); }
 .punch.out { background: var(--red); }
 .clock-screen .banner { width: 100%; max-width: 480px; }

@@ -8,7 +8,7 @@ export type Moment = { ms: number; date: string };
 /** From a server time with offset, e.g. "2026-11-18T19:00:41+01:00". */
 export const fromServer = (iso: string): Moment => ({ ms: Date.parse(iso), date: parseServerTime(iso).date });
 
-/** From a datetime-local value, e.g. "2026-11-18T19:00" (Zurich wall time). */
+/** From a form date-time value, e.g. "2026-11-18T19:00" (Zurich wall time, 24-hour). */
 export const fromInput = (wall: string): Moment => ({ ms: zurichWallToInstant(wall), date: wall.slice(0, 10) });
 
 export type ChangeSummary = {
@@ -52,7 +52,7 @@ export const REQUEST_STATUS_LABELS: Record<RequestStatus, string> = {
   Rejected: "Fix rejected",
 };
 
-/** "2026-11-18T19:00:00.123+01:00" → "2026-11-18T19:00" (Zurich wall time, the format of a datetime-local input). */
+/** "2026-11-18T19:00:00.123+01:00" → "2026-11-18T19:00" (Zurich wall time, the format the date-time fields use). */
 export const toInput = (iso: string | null) => (iso ? iso.slice(0, 16) : "");
 
 /**
@@ -72,7 +72,7 @@ export function canRequestFix(shift: Shift, latest: CorrectionRequest | undefine
 
 /**
  * What to send: only the times the employee actually changed (the server also ignores unchanged ones).
- * `clockIn` / `clockOut` are the form's datetime-local values.
+ * `clockIn` / `clockOut` are the form's date-time values ("2026-11-18T17:00").
  */
 export function buildRequest(shift: Shift, clockIn: string, clockOut: string, reason: string): NewCorrectionRequest {
   const body: NewCorrectionRequest = { reason: reason.trim() };

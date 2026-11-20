@@ -104,3 +104,17 @@ from the time API exists only as an explicit, audited manager correction.
 
 **Not done (as agreed):** cancelling your own request, requests for a missing day, changing the location by request,
 notifications. docs/TESTS.md, DECISIONS.md and README describe the submitted project and weren't updated in proj2.
+
+### 13d: 24-hour time entry with an hour/minute roller (2026-11-20, user's request)
+**Why:** the browser's built-in date-and-time box follows the computer's region settings, so it showed "05:00 PM" while
+the rest of the app shows "17:00". A website can't force it to 24-hour.
+**What:** `screens/DateTimeField.tsx` replaces it in both dialogs (Request a fix, Correct shift): the date keeps the
+browser's calendar picker; the time is a 24-hour box, typed ("17:00", also "1700" / "7:05") or picked from the 🕒
+roller (hours 00–23, minutes 00–59; opens upward when there's no room below). Wrong times ("25:00", "5pm") show "Use
+24-hour time, like 17:00" and keep Save / Send off. Clock In and Clock Out are now stacked (side by side didn't fit).
+Same "2026-11-18T17:00" value as before, so the server is unchanged. Helpers in `src/timeInput.ts`.
+**Proof:** frontend **31/31** (+4 in `timeInput.test.ts`), type-check clean. Browser (dana, Request a fix): times show
+19:11; roller opens on 19 : 11, picking an hour then a minute fills the box and closes it; "25:00" → error + Send off;
+"2030" → "20:30" on leaving the box, length updated. Dialog cancelled, nothing sent.
+**Not checked live:** the manager's Correct shift dialog (same component; the browser was logged in as dana).
+The date part still follows the computer's format (11/20/2026); the summaries below it read "Fri 20 Nov".

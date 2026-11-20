@@ -78,7 +78,7 @@ function zurichOffsetMinutes(utcMs: number): number {
 }
 
 /**
- * A typed Zurich wall time ("2026-11-18T22:30", the format of a datetime-local input) → the real instant (ms).
+ * A typed Zurich wall time ("2026-11-18T22:30", the format of the date-time fields) → the real instant (ms).
  * Used only for DISPLAY (lengths in the fix-request form, Plan 13); the server does the official reading.
  * Two passes, so the summer/winter offset of that very moment is used (e.g. the night the clocks change).
  */

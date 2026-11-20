@@ -1,18 +1,19 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api, ApiError, type AdminShift, type ShiftAudit } from "../api";
 import { locationLabel } from "../location";
+import { toInput } from "../requests";
 import { formatDay, formatRecordedTime, parseServerTime } from "../time";
-
-/** "2026-11-20T17:00:00+01:00" → "2026-11-20T17:00" (Zurich wall time, the format of a datetime-local input). */
-const toInput = (iso: string | null) => (iso ? iso.slice(0, 16) : "");
+import DateTimeField from "./DateTimeField";
 
 /**
  * Manager correction of one shift (Plan 10). Only changed fields are sent; the reason is mandatory;
  * the version stamp makes the server refuse if the shift changed meanwhile. Below: the audit history.
  */
 export default function EditShiftDialog({ shift, onClose, onSaved }: { shift: AdminShift; onClose: () => void; onSaved: () => void }) {
-  const [clockIn, setClockIn] = useState(toInput(shift.clockIn));
-  const [clockOut, setClockOut] = useState(toInput(shift.clockOut));
+  // null = the date/time field isn't a valid entry yet (e.g. "25:00"): Save stays off. "" Clock Out = still open.
+  const [clockIn, setClockIn] = useState<string | null>(toInput(shift.clockIn));
+  const [clockOut, setClockOut] = useState<string | null>(toInput(shift.clockOut));
+  const incomplete = clockIn === null || clockOut === null;
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +23,7 @@ export default function EditShiftDialog({ shift, onClose, onSaved }: { shift: Ad
   useEffect(() => { api.admin.audit(shift.id).then(setAudit).catch(() => setAudit([])); }, [shift.id]);
 
   const save = async (offset?: "+02:00" | "+01:00") => {
+    if (clockIn === null || clockOut === null) return; // Save is disabled meanwhile; just a safety net
     setBusy(true);
     setError(null);
     try {
@@ -49,9 +51,9 @@ export default function EditShiftDialog({ shift, onClose, onSaved }: { shift: Ad
         <h2 id="edit-title">Correct shift</h2>
         <p className="muted">{shift.employeeName} · {formatDay(start.date)} · {locationLabel(shift.workLocation)} · times in Zurich time</p>
 
-        <div className="two-col">
-          <label>Clock In <input type="datetime-local" value={clockIn} onChange={(e) => setClockIn(e.target.value)} required /></label>
-          <label>Clock Out <input type="datetime-local" value={clockOut} onChange={(e) => setClockOut(e.target.value)} placeholder="still open" /></label>
+        <div className="dt-stack">
+          <DateTimeField label="Clock In" value={toInput(shift.clockIn)} onChange={setClockIn} required />
+          <DateTimeField label="Clock Out" value={toInput(shift.clockOut)} onChange={setClockOut} />
         </div>
         {!shift.clockOut && <p className="muted small">This shift is still open. Set a Clock Out to close it.</p>}
 
@@ -71,7 +73,9 @@ export default function EditShiftDialog({ shift, onClose, onSaved }: { shift: Ad
 
         <div className="dialog-actions">
           <button type="button" className="ghost" onClick={onClose}>Cancel</button>
-          <button type="submit" className="primary" disabled={busy}>{busy ? "Saving…" : "Save correction"}</button>
+          <button type="submit" className="primary" disabled={busy || incomplete}>
+            {busy ? "Saving…" : incomplete ? "Finish the date and time" : "Save correction"}
+          </button>
         </div>
 
         <h3>History</h3>
