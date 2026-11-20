@@ -41,6 +41,23 @@ export type CorrectionRequest = {
 /** Zurich wall times like "2026-11-18T17:00"; only the changed ones are sent. */
 export type NewCorrectionRequest = { clockIn?: string; clockOut?: string; reason: string };
 
+// Manager reports (Plan 15). Minutes are closed shifts only, each rounded to the nearest minute, then summed.
+export type ReportTotals = {
+  totalMinutes: number; shifts: number; employeesWorked: number;
+  officeMinutes: number; remoteMinutes: number; unknownLocationMinutes: number;
+  overLimitShifts: number; correctedShifts: number; openShifts: number; pendingRequests: number;
+};
+export type EmployeeReport = {
+  employeeId: number; name: string; totalMinutes: number; shifts: number;
+  officeMinutes: number; remoteMinutes: number; unknownLocationMinutes: number;
+  overLimitShifts: number; correctedShifts: number; openShifts: number;
+};
+export type DayReport = { date: string; totalMinutes: number; shifts: number };
+export type Report = { from: string; to: string; employeeId: number | null; totals: ReportTotals; employees: EmployeeReport[]; days: DayReport[] };
+
+const reportQuery = (from: string, to: string, employeeId?: number) =>
+  `from=${from}&to=${to}` + (employeeId ? `&employeeId=${employeeId}` : "");
+
 export class ApiError extends Error {
   constructor(public status: number, public code: string | undefined, public title: string, public detail?: string) {
     super(detail ?? title);
@@ -53,7 +70,8 @@ export function setUnauthorizedHandler(handler: () => void) {
   onUnauthorized = handler;
 }
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+/** Sends a request with the login badge; returns the response when it's OK, otherwise throws an ApiError. */
+async function send(method: string, path: string, body?: unknown): Promise<Response> {
   const session = getSession();
   let response: Response;
   try {
@@ -68,9 +86,23 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   } catch {
     throw new ApiError(0, "NETWORK", "Can't reach the server. Check your connection and try again.");
   }
+  if (!response.ok) await fail(response, path);
+  return response;
+}
 
-  if (response.ok) return (await response.json()) as T;
+async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  return (await (await send(method, path, body)).json()) as T;
+}
 
+/**
+ * A file from the server (Plan 15: the CSV report). A plain <a href> link can't carry the login badge (it travels in
+ * a request header), so we fetch the file ourselves and hand it to the browser as a "blob" to save.
+ */
+async function download(path: string): Promise<Blob> {
+  return (await send("GET", path)).blob();
+}
+
+async function fail(response: Response, path: string): Promise<never> {
   let problem: { code?: string; title?: string; detail?: string } = {};
   try { problem = await response.json(); } catch { /* not JSON (e.g. an empty 401) */ }
 
@@ -107,5 +139,9 @@ export const api = {
       request<CorrectionRequest[]>("GET", "/api/admin/correction-requests" + (status ? `?status=${status}` : "")),
     approve: (id: number) => request<CorrectionRequest>("POST", `/api/admin/correction-requests/${id}/approve`),
     reject: (id: number) => request<CorrectionRequest>("POST", `/api/admin/correction-requests/${id}/reject`),
+    report: (from: string, to: string, employeeId?: number) =>
+      request<Report>("GET", `/api/admin/reports?${reportQuery(from, to, employeeId)}`),
+    exportReport: (from: string, to: string, employeeId?: number) =>
+      download(`/api/admin/reports/export?${reportQuery(from, to, employeeId)}`),
   },
 };

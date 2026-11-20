@@ -3,6 +3,7 @@ import { api, ApiError, type AdminShift, type EmployeeSummary, type OnShift } fr
 import { addDays, formatDay, formatElapsed, formatHM, parseServerTime, weekDates } from "../time";
 import { useZurichClock } from "../useZurichClock";
 import { locationLabel } from "../location";
+import { mondayOf } from "../reports";
 import EditShiftDialog from "./EditShiftDialog";
 
 export const FLAG_LABELS: Record<string, string> = {
@@ -10,12 +11,6 @@ export const FLAG_LABELS: Record<string, string> = {
   ForgotClockOut: "Forgot to clock out?",
   Corrected: "Corrected",
 };
-
-/** Monday of the week containing a "YYYY-MM-DD" date. */
-function mondayOf(date: string): string {
-  const dow = new Date(`${date}T00:00:00Z`).getUTCDay(); // 0 = Sunday
-  return addDays(date, -((dow + 6) % 7));
-}
 
 /** Manager-only: who's on shift now, everyone's shifts, and corrections (Plan 10). */
 export default function TeamScreen({ onDataChanged }: { onDataChanged?: () => void }) {

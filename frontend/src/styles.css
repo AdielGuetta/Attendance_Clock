@@ -101,6 +101,28 @@ input:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
 /* Wide tables scroll sideways on phones instead of being cut off at the panel edge. */
 .table-scroll { overflow-x: auto; }
 
+/* Plan 15: manager reports */
+.segmented { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.segmented button { border: 0; border-left: 1px solid var(--line); background: var(--card); color: var(--ink); padding: 8px 12px; font: inherit; cursor: pointer; }
+.segmented button:first-child { border-left: 0; }
+.segmented button.selected { background: var(--blue-soft); color: var(--blue); font-weight: 700; }
+.reports .download { margin-left: auto; padding: 8px 14px; }
+.reports .custom-range label { flex-direction: row; align-items: center; gap: 6px; font-weight: 500; }
+.reports .custom-range input { padding: 7px 10px; }
+.report-title { margin: 4px 0 0; font-size: 1.1rem; }
+.reports .link { font: inherit; cursor: pointer; text-decoration: underline; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.tile { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.tile.warn { border-color: var(--amber); background: var(--amber-soft); }
+.tile-value { font-size: 1.6rem; font-weight: 800; }
+.tile-label { color: var(--muted); font-size: 0.88rem; }
+.day-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.day-bars li { display: grid; grid-template-columns: 96px 1fr 90px; gap: 10px; align-items: center; font-size: 0.92rem; }
+.day-bars li.empty { color: var(--muted); }
+.day-bar-track { background: var(--bg); border-radius: 6px; height: 12px; overflow: hidden; }
+.day-bar { display: block; height: 100%; background: var(--blue); border-radius: 6px; }
+.day-bar-value { text-align: right; }
+
 /* Plan 13: correction requests */
 .badge.request-pending { background: var(--blue-soft); color: var(--blue); }
 .badge.request-approved { background: var(--green-soft); color: var(--green); }

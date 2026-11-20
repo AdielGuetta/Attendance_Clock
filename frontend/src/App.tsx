@@ -6,8 +6,9 @@ import ClockScreen from "./screens/ClockScreen";
 import WeekScreen from "./screens/WeekScreen";
 import TeamScreen from "./screens/TeamScreen";
 import RequestsScreen from "./screens/RequestsScreen";
+import ReportsScreen from "./screens/ReportsScreen";
 
-type Tab = "clock" | "week" | "team" | "requests";
+type Tab = "clock" | "week" | "team" | "requests" | "reports";
 
 const FORGOTTEN_POLL_MS = 2 * 60 * 1000;
 
@@ -85,6 +86,9 @@ export default function App() {
               )}
             </button>
           )}
+          {isManager && (
+            <button className={tab === "reports" ? "tab active" : "tab"} onClick={() => setTab("reports")}>Reports</button>
+          )}
         </nav>
         <div className="user">
           <span className="user-name">{session.employee.displayName}</span>
@@ -95,6 +99,7 @@ export default function App() {
         {tab === "clock" ? <ClockScreen onViewAll={() => setTab("week")} />
           : tab === "week" ? <WeekScreen />
           : tab === "requests" ? <RequestsScreen onDataChanged={refreshPending} />
+          : tab === "reports" ? <ReportsScreen />
           : <TeamScreen onDataChanged={refreshForgotten} />}
       </main>
     </div>

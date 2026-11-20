@@ -36,6 +36,7 @@ builder.Services.AddScoped<ShiftService>();
 builder.Services.AddScoped<HistoryService>(); // Plan 08: my shifts + totals
 builder.Services.AddScoped<AdminService>();   // Plan 10: manager views + corrections
 builder.Services.AddScoped<AttendanceClock.Api.Requests.CorrectionRequestService>(); // Plan 13: employee correction requests
+builder.Services.AddScoped<AttendanceClock.Api.Reports.ReportService>(); // Plan 15: manager reports + CSV export
 
 // ── Login (Plan 06, PRD F1) ───────────────────────────────────────────────────────────────────────
 builder.Services.AddOptions<AuthOptions>()
