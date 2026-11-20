@@ -10,14 +10,14 @@ services:
     # SQL Server images exist only for Intel/AMD (x86-64). On Apple Silicon Macs, Docker Desktop runs this
     # under emulation (Rosetta). Stating the platform makes that explicit and avoids "no matching manifest" errors.
     platform: linux/amd64
-    container_name: attendance-db
+    container_name: playground-db
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_PID: "Developer"
       # Local-development password only. Override it by setting MSSQL_SA_PASSWORD in a .env file.
       MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:-Dev_Passw0rd_2026!}"
     ports:
-      - "1433:1433"   # so tools on Windows (SSMS, Azure Data Studio) can look inside
+      - "1434:1433"   # so tools on Windows (SSMS, Azure Data Studio) can look inside
     volumes:
       - db-data:/var/opt/mssql   # keeps the data when the container restarts
     healthcheck:
@@ -31,7 +31,7 @@ services:
   # 2) Server: our ASP.NET Core API, run with "dotnet watch" so code changes reload automatically.
   api:
     image: mcr.microsoft.com/dotnet/sdk:10.0
-    container_name: attendance-api
+    container_name: playground-api
     restart: unless-stopped   # if it crashes, Docker starts it again
     working_dir: /src
     command: ["dotnet", "watch", "run", "--project", "AttendanceClock.Api", "--", "--urls", "http://0.0.0.0:5080"]
@@ -42,7 +42,7 @@ services:
       DOTNET_WATCH_RESTART_ON_RUDE_EDIT: "1"   # restart automatically instead of asking
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
     ports:
-      - "5080:5080"
+      - "5081:5080"
     volumes:
       - ./backend:/src                                 # our code, shared live from Windows
       - api-bin:/src/AttendanceClock.Api/bin            # Linux build output stays inside Docker,
@@ -54,12 +54,12 @@ services:
       db:
         condition: service_healthy
 
-  # 3) Screens: the React app (Vite dev server). Open http://localhost:5174
+  # 3) Screens: the React app (Vite dev server). Open http://localhost:5175 (PLAYGROUND copy)
   #    (not Vite's usual 5173, which other local projects often occupy)
   #    It forwards /api/* calls to the "api" container, so the browser talks to one address only.
   web:
     image: node:24-alpine
-    container_name: attendance-web
+    container_name: playground-web
     working_dir: /app
     # Fail fast: the config file is named explicitly (missing → error, not silent defaults), and the vital settings
     # are repeated as flags, so even a restart can't come up on the wrong port. See DECISIONS.md (merge incident).
@@ -76,7 +76,7 @@ services:
       VITE_API_TARGET: "http://api:5080"
       CHOKIDAR_USEPOLLING: "1"   # file changes from Windows are detected by polling
     ports:
-      - "5174:5174"
+      - "5175:5174"
     volumes:
       - ./frontend:/app                       # our React code, shared live from Windows
       - web-node-modules:/app/node_modules    # downloaded packages stay inside Docker

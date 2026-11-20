@@ -3,13 +3,13 @@
   "configurations": [
     {
       "name": "web",
-      "url": "http://localhost:5174",
-      "port": 5174
+      "url": "http://localhost:5175",
+      "port": 5175
     },
     {
       "name": "api",
-      "url": "http://localhost:5080",
-      "port": 5080
+      "url": "http://localhost:5081",
+      "port": 5081
     }
   ]
 }
