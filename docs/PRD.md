@@ -54,7 +54,8 @@ Self-registration: **no**. Employees are created by a manager (or seeded). *(D-1
 ### Nice to have (only if MVP is solid)
 - **N1** CSV export of shifts for a date range (payroll hand-off).
 - **N2** Employee "undo" of an accidental punch within 2 minutes.
-- **N3** Employee can request a correction (manager approves).
+- **N3** Employee can request a correction (manager approves). *Built in Plan 13 (proj2): finished shifts only;
+  approval runs the F6 correction (labelled, audited); reject without a note.*
 - ~~**N4** Hebrew / RTL UI.~~ Decided: the UI is in English.
 
 ### Out of scope (stated in DECISIONS.md as "chose not to do")

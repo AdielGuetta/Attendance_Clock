@@ -100,6 +100,21 @@ input:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
 .location { white-space: nowrap; }
 /* Wide tables scroll sideways on phones instead of being cut off at the panel edge. */
 .table-scroll { overflow-x: auto; }
+
+/* Plan 13: correction requests */
+.badge.request-pending { background: var(--blue-soft); color: var(--blue); }
+.badge.request-approved { background: var(--green-soft); color: var(--green); }
+.badge.request-rejected { background: var(--red-soft); color: var(--red); }
+.request-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.request-list li { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.request-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.compare { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.compare th { text-align: left; color: var(--muted); font-weight: 600; padding: 2px 12px 2px 0; }
+.compare td { padding: 2px 12px 2px 0; }
+.compare .changed { background: var(--amber-soft); color: var(--amber); border-radius: 4px; padding: 0 4px; font-weight: 700; }
+.request-reason { margin: 0; font-style: italic; }
+.request-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.request-actions .primary { padding: 8px 18px; }
 .punch.out { background: var(--red); }
 .clock-screen .banner { width: 100%; max-width: 480px; }
 

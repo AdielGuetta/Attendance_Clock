@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { api, ApiError, type History, type Shift } from "../api";
+import { api, ApiError, type CorrectionRequest, type History, type Shift } from "../api";
 import { locationLabel } from "../location";
+import { canRequestFix, latestByShift, REQUEST_STATUS_LABELS } from "../requests";
+import RequestFixDialog from "./RequestFixDialog";
 import { addDays, formatDay, formatHM, parseServerTime, weekDates } from "../time";
 
 const FLAG_LABELS: Record<string, string> = {
@@ -13,19 +15,27 @@ export default function WeekScreen() {
   const [history, setHistory] = useState<History | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [requests, setRequests] = useState<Map<number, CorrectionRequest>>(new Map()); // Plan 13: newest per shift
+  const [fixing, setFixing] = useState<Shift | null>(null);
+  const [sent, setSent] = useState(false);
+
+  const loadRequests = useCallback(async () => {
+    try { setRequests(latestByShift(await api.myRequests())); } catch { /* the week still shows without statuses */ }
+  }, []);
 
   const load = useCallback(async (from?: string, to?: string) => {
     setLoading(true);
     setError(null);
     try {
       // No dates the first time: the server works out "this week" from the official Zurich date.
-      setHistory(await api.history(from, to));
+      const [h] = await Promise.all([api.history(from, to), loadRequests()]);
+      setHistory(h);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Couldn't load your shifts.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadRequests]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -48,6 +58,7 @@ export default function WeekScreen() {
       </div>
 
       {error && <div className="banner error">{error}</div>}
+      {sent && <div className="banner success" role="status">Request sent. Your manager will approve or reject it.</div>}
 
       {history && (
         <>
@@ -64,7 +75,10 @@ export default function WeekScreen() {
                 <li key={date} className={shifts.length || inProgress ? "day" : "day empty"}>
                   <div className="day-name">{formatDay(date)}</div>
                   <div className="day-shifts">
-                    {shifts.map((s) => <ShiftRow key={s.id} shift={s} />)}
+                    {shifts.map((s) => (
+                      <ShiftRow key={s.id} shift={s} request={requests.get(s.id)}
+                        onRequestFix={() => { setSent(false); setFixing(s); }} />
+                    ))}
                     {inProgress && <ShiftRow shift={inProgress} />}
                     {!shifts.length && !inProgress && <span className="muted">-</span>}
                   </div>
@@ -73,14 +87,20 @@ export default function WeekScreen() {
               );
             })}
           </ul>
-          <p className="fineprint">Times in Zurich time. A shift counts on the day it started. Each shift is rounded to the nearest minute.</p>
+          <p className="fineprint">Times in Zurich time. A shift counts on the day it started. Each shift is rounded to the nearest minute.
+            {" "}Wrong time on a finished shift? Use "Request a fix" and your manager will review it.</p>
         </>
+      )}
+
+      {fixing && (
+        <RequestFixDialog shift={fixing} onClose={() => setFixing(null)}
+          onSent={() => { setFixing(null); setSent(true); void loadRequests(); }} />
       )}
     </section>
   );
 }
 
-function ShiftRow({ shift }: { shift: Shift }) {
+function ShiftRow({ shift, request, onRequestFix }: { shift: Shift; request?: CorrectionRequest; onRequestFix?: () => void }) {
   const start = parseServerTime(shift.clockIn);
   const end = shift.clockOut ? parseServerTime(shift.clockOut) : null;
   return (
@@ -92,6 +112,15 @@ function ShiftRow({ shift }: { shift: Shift }) {
       {shift.durationMinutes !== null && <span className="shift-len">{formatHM(shift.durationMinutes)}</span>}
       <span className="location muted">{locationLabel(shift.workLocation)}</span>
       {shift.flags.map((f) => <span key={f} className="badge">{FLAG_LABELS[f] ?? f}</span>)}
+      {request && (
+        <span className={`badge request-${request.status.toLowerCase()}`}
+          title={request.decidedBy ? `by ${request.decidedBy}` : `"${request.reason}"`}>
+          {REQUEST_STATUS_LABELS[request.status]}
+        </span>
+      )}
+      {onRequestFix && canRequestFix(shift, request) && (
+        <button className="ghost small-btn" onClick={onRequestFix}>Request a fix</button>
+      )}
     </div>
   );
 }

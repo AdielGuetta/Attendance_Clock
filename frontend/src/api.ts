@@ -30,6 +30,17 @@ export type EmployeeSummary = { id: number; userName: string; displayName: strin
 export type ShiftAudit = { id: number; changedAt: string; changedBy: string; field: string; oldValue: string; newValue: string; reason: string };
 export type CorrectShift = { clockIn?: string; clockOut?: string; reason: string; rowVersion: string };
 
+// Correction requests (Plan 13). Requested times are null when the employee keeps the recorded one.
+export type RequestStatus = "Pending" | "Approved" | "Rejected";
+export type CorrectionRequest = {
+  id: number; shiftId: number; employeeId: number; employeeName: string; status: RequestStatus;
+  requestedClockIn: string | null; requestedClockOut: string | null; reason: string; createdAt: string;
+  decidedBy: string | null; decidedAt: string | null;
+  shift: Shift; // the shift's CURRENT recorded times, for comparison
+};
+/** Zurich wall times like "2026-11-18T17:00"; only the changed ones are sent. */
+export type NewCorrectionRequest = { clockIn?: string; clockOut?: string; reason: string };
+
 export class ApiError extends Error {
   constructor(public status: number, public code: string | undefined, public title: string, public detail?: string) {
     super(detail ?? title);
@@ -79,6 +90,9 @@ export const api = {
   clockOut: () => request<Shift>("POST", "/api/punches/clock-out"),
   history: (from?: string, to?: string) =>
     request<History>("GET", from && to ? `/api/shifts/mine?from=${from}&to=${to}` : "/api/shifts/mine"),
+  requestCorrection: (shiftId: number, body: NewCorrectionRequest) =>
+    request<CorrectionRequest>("POST", `/api/shifts/${shiftId}/correction-requests`, body),
+  myRequests: () => request<CorrectionRequest[]>("GET", "/api/correction-requests/mine"),
 
   admin: {
     employees: () => request<EmployeeSummary[]>("GET", "/api/admin/employees"),
@@ -88,5 +102,9 @@ export const api = {
         (employeeId ? `&employeeId=${employeeId}` : "") + (flaggedOnly ? "&flaggedOnly=true" : "")),
     audit: (shiftId: number) => request<ShiftAudit[]>("GET", `/api/admin/shifts/${shiftId}/audit`),
     correct: (shiftId: number, body: CorrectShift) => request<AdminShift>("PATCH", `/api/admin/shifts/${shiftId}`, body),
+    requests: (status?: RequestStatus) =>
+      request<CorrectionRequest[]>("GET", "/api/admin/correction-requests" + (status ? `?status=${status}` : "")),
+    approve: (id: number) => request<CorrectionRequest>("POST", `/api/admin/correction-requests/${id}/approve`),
+    reject: (id: number) => request<CorrectionRequest>("POST", `/api/admin/correction-requests/${id}/reject`),
   },
 };

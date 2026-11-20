@@ -1,6 +1,6 @@
 # Plan 13 (proj2): Employee correction requests + manager approve / reject
 
-**Status:** approved 2026-11-20 with two changes (closed shifts only; reject without a note) · **Branch:** `feature/correction-requests` · **PRD refs:** N3, F6, rule 2, EC-13
+**Status:** done ✅ (approved 2026-11-20 with two changes: closed shifts only; reject without a note) · **Branch:** `feature/correction-requests` · **PRD refs:** N3, F6, rule 2, EC-13
 
 ## Why
 Today, if a recorded time is wrong (e.g. dana clocked out late because she forgot), she has to ask her manager by phone
@@ -68,5 +68,23 @@ from the time API exists only as an explicit, audited manager correction.
   requests → exactly 1 · employee 403 · approve = corrected + labelled + flagged + audit row · approve that now overlaps →
   refused, still pending, no audit · reject → shift untouched, new request allowed · decide twice 409 · list filter.
 
-### 13b: Screens
-*(next)*
+### 13b: Screens (2026-11-20) ✅
+- **Code:** `src/requests.ts` (status labels, newest request per shift, "can ask for a fix?", send only changed times)
+  + `requests.test.ts`; `api.ts` (types + 5 calls); `screens/RequestFixDialog.tsx`; My week (`WeekScreen.tsx`):
+  "Request a fix" on finished shifts without a waiting request, status badge (blue pending / green approved / red
+  rejected); manager `screens/RequestsScreen.tsx` (recorded vs requested with the changed time highlighted and the new
+  length, Approve / Reject, "Recently decided"); `App.tsx`: **Requests** tab with a count badge, refreshed with the
+  forgotten-shift badge (every 2 min, on focus, after a decision).
+- **Tests:** frontend **23/23** (was 20; +3), type-check clean; backend still 85/85.
+- **Browser (http://localhost:5175):** dana → My week → "Request a fix" on Tue 17 (16:30 → 17:00, "Stayed for a
+  delivery") → "Fix pending approval", button gone, time unchanged · second request on Wed 18 (in 22:00 → 22:30) ·
+  manager sees **"Requests ②"**, recorded vs requested side by side → Approve #1 → badge ① → Reject #2 → no badge,
+  both under "Recently decided" · Team tab: Tue 17 = 08:00 → 17:00 ✎, 9:00, "Corrected"; Wed 18 unchanged · Edit dialog
+  history: *"Clock Out 16:30 → 17:00 by Maya Manager · Request #1 from Dana Cohen: Stayed for a delivery, left at 17:00"*
+  · dana sees "Corrected by manager" + "Fix approved" on Tue 17, "Fix rejected" (and can ask again) on Wed 18, week total
+  17:26 → 17:56 · phone width: wraps, no sideways scroll.
+- **Not shown live:** the "no button on an open shift" case (dana had no open shift at the time); covered by the
+  `canRequestFix` unit test and backend test 3.
+
+**Not done (as agreed):** cancelling your own request, requests for a missing day, changing the location by request,
+notifications. docs/TESTS.md, DECISIONS.md and README describe the submitted project and weren't updated in proj2.

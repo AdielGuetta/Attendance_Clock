@@ -15,7 +15,10 @@ uses it to add features and learn how frontend, backend and database connect. Se
 - **Done so far in proj2:** "Recent shifts" box on the Clock screen (`frontend/src/recent.ts`, `screens/RecentShifts.tsx`),
   merged into `playground`. **Work location** (Plan 12, branch `feature/work-location`): `Shifts.WorkLocation` (NULL for
   old shifts), Clock In body `{ location }` → 400 `INVALID_LOCATION`, `Punches/ClockInRequest.cs`, `frontend/src/location.ts`.
-  Tests: 67 backend, 20 frontend.
+  **Correction requests** (Plan 13, branch `feature/correction-requests`, on top of work location): table
+  `CorrectionRequests` (one pending per shift), `backend/…/Requests/`, approve = `AdminService.CorrectAsync` in a
+  transaction; finished shifts only, reject without a note. UI: `src/requests.ts`, `RequestFixDialog`, `RequestsScreen`
+  (manager tab + badge). Tests: 85 backend, 23 frontend.
 - **Feature ideas** (from the user's older app "Team Clock", a public demo at https://hybrid-clock.bountifulmallard2.chatgpt.site/),
   in the agreed order:
   1. **Work location** (Office / Remote, chosen before Clock In, stored per shift, shown everywhere). It goes through every

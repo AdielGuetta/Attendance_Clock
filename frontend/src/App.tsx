@@ -5,8 +5,9 @@ import LoginScreen from "./screens/LoginScreen";
 import ClockScreen from "./screens/ClockScreen";
 import WeekScreen from "./screens/WeekScreen";
 import TeamScreen from "./screens/TeamScreen";
+import RequestsScreen from "./screens/RequestsScreen";
 
-type Tab = "clock" | "week" | "team";
+type Tab = "clock" | "week" | "team" | "requests";
 
 const FORGOTTEN_POLL_MS = 2 * 60 * 1000;
 
@@ -15,6 +16,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("clock");
   const [notice, setNotice] = useState<string | null>(null);
   const [forgottenCount, setForgottenCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0); // Plan 13: correction requests waiting for a manager
 
   // The tab is only a convenience: the server refuses manager endpoints to non-managers anyway (403).
   const isManager = session?.employee.role === "Manager";
@@ -37,14 +39,20 @@ export default function App() {
     } catch { /* keep the last count; 401 is handled globally */ }
   }, [isManager]);
 
+  // Plan 13: count on the Requests tab, refreshed on the same schedule as the forgotten-shift badge.
+  const refreshPending = useCallback(async () => {
+    if (!isManager) return;
+    try { setPendingCount((await api.admin.requests("Pending")).length); } catch { /* keep the last count */ }
+  }, [isManager]);
+
   useEffect(() => {
-    if (!isManager) { setForgottenCount(0); return; }
-    void refreshForgotten();
-    const id = setInterval(refreshForgotten, FORGOTTEN_POLL_MS);
-    const onFocus = () => void refreshForgotten();
-    window.addEventListener("focus", onFocus);
-    return () => { clearInterval(id); window.removeEventListener("focus", onFocus); };
-  }, [isManager, refreshForgotten]);
+    if (!isManager) { setForgottenCount(0); setPendingCount(0); return; }
+    const refreshBadges = () => { void refreshForgotten(); void refreshPending(); };
+    refreshBadges();
+    const id = setInterval(refreshBadges, FORGOTTEN_POLL_MS);
+    window.addEventListener("focus", refreshBadges);
+    return () => { clearInterval(id); window.removeEventListener("focus", refreshBadges); };
+  }, [isManager, refreshForgotten, refreshPending]);
 
   if (!session) {
     return <LoginScreen notice={notice} onLoggedIn={(s) => { setNotice(null); setTab("clock"); setSession(s); }} />;
@@ -68,6 +76,15 @@ export default function App() {
               )}
             </button>
           )}
+          {isManager && (
+            <button className={tab === "requests" ? "tab active" : "tab"} onClick={() => setTab("requests")}>
+              Requests
+              {pendingCount > 0 && (
+                <span className="tab-badge" title={`${pendingCount} correction request(s) waiting`}
+                  aria-label={`${pendingCount} waiting request(s)`}>{pendingCount}</span>
+              )}
+            </button>
+          )}
         </nav>
         <div className="user">
           <span className="user-name">{session.employee.displayName}</span>
@@ -75,7 +92,10 @@ export default function App() {
         </div>
       </header>
       <main className="content">
-        {tab === "clock" ? <ClockScreen onViewAll={() => setTab("week")} /> : tab === "week" ? <WeekScreen /> : <TeamScreen onDataChanged={refreshForgotten} />}
+        {tab === "clock" ? <ClockScreen onViewAll={() => setTab("week")} />
+          : tab === "week" ? <WeekScreen />
+          : tab === "requests" ? <RequestsScreen onDataChanged={refreshPending} />
+          : <TeamScreen onDataChanged={refreshForgotten} />}
       </main>
     </div>
   );
