@@ -115,6 +115,13 @@ input:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
 .request-reason { margin: 0; font-style: italic; }
 .request-actions { display: flex; justify-content: flex-end; gap: 10px; }
 .request-actions .primary { padding: 8px 18px; }
+/* What a requested change does: new length, moved day, over 14 h (warns, never blocks) */
+.change-summary { background: var(--blue-soft); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; }
+.change-summary.warn { background: var(--amber-soft); color: var(--ink); border: 1px solid var(--amber); }
+.change-summary .changed, .request-head .changed { background: var(--amber-soft); color: var(--amber); border-radius: 4px; padding: 0 4px; font-weight: 700; }
+.error-text { color: var(--red); }
+.badge.over-limit { background: var(--red-soft); color: var(--red); }
+.request-list li.over-limit { border-color: var(--red); }
 .punch.out { background: var(--red); }
 .clock-screen .banner { width: 100%; max-width: 480px; }
 

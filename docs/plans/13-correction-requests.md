@@ -86,5 +86,21 @@ from the time API exists only as an explicit, audited manager correction.
 - **Not shown live:** the "no button on an open shift" case (dana had no open shift at the time); covered by the
   `canRequestFix` unit test and backend test 3.
 
+### 13c: Length and day-change warnings (2026-11-20, user's idea) ✅
+**Why:** the date pickers let an employee move a time to another day. That's right for a night shift, but a typo
+(16 Nov instead of 17 Nov) could quietly create a 33-hour shift, and the manager card showed only "08:00".
+**What (warn, never block: the manager decides, like F7's "record honestly and flag"):**
+- `time.ts`: `zurichWallToInstant` (typed Zurich time → exact instant, DST-aware), `formatDelta`, `TOO_LONG_MINUTES`.
+  `requests.ts`: `summarizeChange` / `summarizeRequest` (new length, change vs recorded, moved day, over 14 h).
+- **Employee form:** live "New shift: Tue 17 Nov 08:00 → Wed 18 Nov 08:00 · Length 24:00 (was 9:00, +15:00)", a moved
+  day highlighted with a note, an amber "Over 14 hours" box, and "Clock Out must be after Clock In" (Send disabled).
+- **Manager card:** full dates on both rows when a day moved (a "+1" would hide it), the changed date highlighted, new
+  length with the change, "Day changed" and red "Over 14 h" badges, red card border.
+- **Tests:** frontend **27/27** (+4: length + moved day, strictly-more-than-14 h, DST night, stored request).
+- **Browser:** the user's own request #3 (Fri 20 Nov Clock In moved to *Thu 19 Nov*, "forgot") now shows
+  "Thu 19 Nov 17:36" highlighted, 24:56 (+24:00), Day changed, Over 14 h. Test request #4 (Tue 17 Clock Out → Wed 18
+  08:00, 24:00) the same. A test that moved a Clock In over dana's other Friday shifts was refused by the server
+  ("would overlap another shift"), as designed. Both requests left pending for the user.
+
 **Not done (as agreed):** cancelling your own request, requests for a missing day, changing the location by request,
 notifications. docs/TESTS.md, DECISIONS.md and README describe the submitted project and weren't updated in proj2.

@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError, type CorrectionRequest } from "../api";
 import { locationLabel } from "../location";
-import { REQUEST_STATUS_LABELS } from "../requests";
-import { formatDay, formatHM, parseServerTime } from "../time";
+import { REQUEST_STATUS_LABELS, summarizeRequest } from "../requests";
+import { formatDay, formatDelta, formatHM, parseServerTime } from "../time";
 
-/** "08:00" or "08:00 +1" when the time is on the day after the shift started. */
-function hm(iso: string, startDate: string) {
+/**
+ * "08:00", or "08:00 +1" when on the day after the shift started. When a request moves a day, every time on the card
+ * shows its full date instead ("Mon 16 Nov 08:00"): a "+1" relative to the old start would hide the move.
+ */
+function when(iso: string, startDate: string, withDate: boolean) {
   const t = parseServerTime(iso);
+  if (withDate) return <>{formatDay(t.date)} {t.hm}</>;
   return <>{t.hm}{t.date !== startDate && <sup> +1</sup>}</>;
 }
 
@@ -67,27 +71,33 @@ export default function RequestsScreen({ onDataChanged }: { onDataChanged?: () =
               const start = parseServerTime(r.shift.clockIn).date;
               const newIn = r.requestedClockIn ?? r.shift.clockIn;
               const newOut = r.requestedClockOut ?? r.shift.clockOut!;
-              const newMinutes = Math.round((Date.parse(newOut) - Date.parse(newIn)) / 60000);
+              const s = summarizeRequest(r); // new length, moved day, over 14 h (user's idea)
+              const dayMoved = s.inDayChanged || s.outDayChanged;
               return (
-                <li key={r.id}>
+                <li key={r.id} className={s.overLimit ? "over-limit" : ""}>
                   <div className="request-head">
                     <strong>{r.employeeName}</strong>
                     <span className="muted">{formatDay(start)} · {locationLabel(r.shift.workLocation)} · request #{r.id}</span>
+                    {dayMoved && <span className="badge" title="A requested time is on a different day than the recorded one">Day changed</span>}
+                    {s.overLimit && <span className="badge over-limit" title="The shift would be longer than 14 hours">Over 14 h</span>}
                   </div>
                   <table className="compare">
                     <tbody>
                       <tr>
                         <th>Recorded</th>
-                        <td className="nums">{hm(r.shift.clockIn, start)} → {hm(r.shift.clockOut!, start)}</td>
+                        <td className="nums">{when(r.shift.clockIn, start, dayMoved)} → {when(r.shift.clockOut!, start, dayMoved)}</td>
                         <td className="nums muted">{r.shift.durationMinutes !== null ? formatHM(r.shift.durationMinutes) : ""}</td>
                       </tr>
                       <tr>
                         <th>Requested</th>
                         <td className="nums">
-                          <span className={r.requestedClockIn ? "changed" : ""}>{hm(newIn, start)}</span> →{" "}
-                          <span className={r.requestedClockOut ? "changed" : ""}>{hm(newOut, start)}</span>
+                          <span className={r.requestedClockIn ? "changed" : ""}>{when(newIn, start, dayMoved)}</span> →{" "}
+                          <span className={r.requestedClockOut ? "changed" : ""}>{when(newOut, start, dayMoved)}</span>
                         </td>
-                        <td className="nums">{formatHM(newMinutes)}</td>
+                        <td className="nums">
+                          <strong className={s.overLimit ? "error-text" : ""}>{formatHM(s.minutes)}</strong>{" "}
+                          <span className="muted">({formatDelta(s.deltaMinutes)})</span>
+                        </td>
                       </tr>
                     </tbody>
                   </table>

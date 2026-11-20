@@ -67,6 +67,33 @@ export function openMinutes(clockInIso: string, now: Date): number {
   return Math.max(0, Math.floor((now.getTime() - Date.parse(clockInIso)) / 60000));
 }
 
+/** Same 14 h threshold, for finished shifts: longer than this is flagged "Over 14 h" (F7). */
+export const TOO_LONG_MINUTES = FORGOT_CLOCK_OUT_MINUTES;
+
+/** Zurich's offset from UTC at a given instant, in minutes (60 in winter, 120 in summer). */
+function zurichOffsetMinutes(utcMs: number): number {
+  const name = new Intl.DateTimeFormat("en-GB", { timeZone: ZURICH, timeZoneName: "shortOffset" })
+    .formatToParts(new Date(utcMs)).find((p) => p.type === "timeZoneName")?.value;
+  return name === "GMT+2" ? 120 : 60;
+}
+
+/**
+ * A typed Zurich wall time ("2026-11-18T22:30", the format of a datetime-local input) → the real instant (ms).
+ * Used only for DISPLAY (lengths in the fix-request form, Plan 13); the server does the official reading.
+ * Two passes, so the summer/winter offset of that very moment is used (e.g. the night the clocks change).
+ */
+export function zurichWallToInstant(wall: string): number {
+  const asIfUtc = Date.parse(`${wall}:00Z`);
+  const firstGuess = asIfUtc - zurichOffsetMinutes(asIfUtc) * 60000;
+  return asIfUtc - zurichOffsetMinutes(firstGuess) * 60000;
+}
+
+/** 30 → "+0:30", -90 → "−1:30", 0 → "±0:00". */
+export function formatDelta(minutes: number): string {
+  const sign = minutes > 0 ? "+" : minutes < 0 ? "−" : "±";
+  return `${sign}${formatHM(Math.abs(minutes))}`;
+}
+
 /** True when an open shift is older than 14 hours (F7, Plan 11). */
 export function isLikelyForgotten(clockInIso: string, now: Date): boolean {
   return openMinutes(clockInIso, now) > FORGOT_CLOCK_OUT_MINUTES;
