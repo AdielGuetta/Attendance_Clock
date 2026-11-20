@@ -20,8 +20,8 @@ uses it to add features and learn how frontend, backend and database connect. Se
   transaction; finished shifts only, reject without a note. UI: `src/requests.ts`, `RequestFixDialog`, `RequestsScreen`
   (manager tab + badge). Then: length/day-change warnings (13c), 24-hour `DateTimeField` with an hour/minute roller
   (13d). **Safety fixes** (Plan 14): Clock Out sends `{ shiftId }` (409 `SHIFT_CHANGED`), `Data/EmployeeLock.cs`
-  (one change per employee at a time), `IsActive` checked on every request (JWT `OnTokenValidated`).
-  Tests: 90 backend, 31 frontend.
+  (one change per employee at a time). "Still active on every request" was built and cancelled by the user: only
+  Clock In / Out check it. Tests: 88 backend, 31 frontend.
 - **Feature ideas** (from the user's older app "Team Clock", a public demo at https://hybrid-clock.bountifulmallard2.chatgpt.site/),
   in the agreed order:
   1. **Work location** (Office / Remote, chosen before Clock In, stored per shift, shown everywhere). It goes through every

@@ -21,6 +21,9 @@ public sealed class ShiftService(AppDbContext db, ITrustedClock clock, ILogger<S
     /// <summary>Shifts longer than this are flagged for the manager (PRD F7).</summary>
     public static readonly TimeSpan TooLongThreshold = TimeSpan.FromHours(14);
 
+    public Task<bool> IsActiveEmployeeAsync(int employeeId, CancellationToken ct) =>
+        db.Employees.AnyAsync(e => e.Id == employeeId && e.IsActive, ct);
+
     public Task<Shift?> GetOpenShiftAsync(int employeeId, CancellationToken ct) =>
         db.Shifts.AsNoTracking().FirstOrDefaultAsync(s => s.EmployeeId == employeeId && s.ClockOut == null, ct);
 

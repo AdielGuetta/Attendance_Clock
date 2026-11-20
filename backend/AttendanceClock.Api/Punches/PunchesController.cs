@@ -28,8 +28,11 @@ public class PunchesController(ShiftService shifts) : ControllerBase
             return ApiProblem.Create(StatusCodes.Status400BadRequest, "INVALID_LOCATION",
                 "Choose where you're working.", "Send \"Office\" or \"Remote\" as the location.");
 
-        // A deactivated account never gets here: it's refused for every endpoint when the login badge is checked (Plan 14).
-        var result = await shifts.ClockInAsync(User.GetEmployeeId(), location, ct);
+        var employeeId = User.GetEmployeeId();
+        if (!await shifts.IsActiveEmployeeAsync(employeeId, ct))
+            return InactiveAccount();
+
+        var result = await shifts.ClockInAsync(employeeId, location, ct);
         return result.Outcome switch
         {
             PunchOutcome.Ok => StatusCode(StatusCodes.Status201Created, ShiftDto.From(result.Shift!)),
@@ -47,7 +50,11 @@ public class PunchesController(ShiftService shifts) : ControllerBase
     public async Task<IActionResult> ClockOut(
         [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] ClockOutRequest? request, CancellationToken ct)
     {
-        var result = await shifts.ClockOutAsync(User.GetEmployeeId(), request?.ShiftId, ct);
+        var employeeId = User.GetEmployeeId();
+        if (!await shifts.IsActiveEmployeeAsync(employeeId, ct))
+            return InactiveAccount();
+
+        var result = await shifts.ClockOutAsync(employeeId, request?.ShiftId, ct);
         return result.Outcome switch
         {
             PunchOutcome.Ok => Ok(ShiftDto.From(result.Shift!)),
@@ -70,6 +77,9 @@ public class PunchesController(ShiftService shifts) : ControllerBase
             ? new PunchStatusDto("OffShift", null)
             : new PunchStatusDto("OnShift", ShiftDto.From(open));
     }
+
+    private static ObjectResult InactiveAccount() => ApiProblem.Create(StatusCodes.Status401Unauthorized,
+        "ACCOUNT_INACTIVE", "Your account is no longer active.");
 
     private static ObjectResult TimeInconsistent() => ApiProblem.Create(StatusCodes.Status503ServiceUnavailable,
         "TIME_SOURCE_INCONSISTENT", "The time service returned an inconsistent time.",

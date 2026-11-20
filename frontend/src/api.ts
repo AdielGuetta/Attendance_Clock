@@ -48,9 +48,8 @@ export class ApiError extends Error {
 }
 
 /** Called when the server says the login badge is no longer valid (expired, tampered, account deactivated). */
-// `code` is the server's reason, e.g. "ACCOUNT_INACTIVE" (Plan 14: checked on every request).
-let onUnauthorized: (code?: string) => void = () => {};
-export function setUnauthorizedHandler(handler: (code?: string) => void) {
+let onUnauthorized: () => void = () => {};
+export function setUnauthorizedHandler(handler: () => void) {
   onUnauthorized = handler;
 }
 
@@ -77,7 +76,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 
   if (response.status === 401 && path !== "/api/auth/login") {
     clearSession();
-    onUnauthorized(problem.code);
+    onUnauthorized();
   }
   throw new ApiError(response.status, problem.code, problem.title ?? `Request failed (${response.status})`, problem.detail);
 }

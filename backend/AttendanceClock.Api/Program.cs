@@ -59,35 +59,6 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
             RoleClaimType = TokenService.Claims.Role,
             ClockSkew = TimeSpan.FromSeconds(30),
         };
-        // Plan 14: a login badge stays valid for up to 60 minutes, but a deactivated account must stop working at once,
-        // on EVERY endpoint (history, requests, manager actions), not only Clock In / Out. One small lookup by id.
-        jwt.Events = new JwtBearerEvents
-        {
-            OnTokenValidated = async context =>
-            {
-                var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
-                var active = int.TryParse(context.Principal?.FindFirst(TokenService.Claims.EmployeeId)?.Value, out var id)
-                    && await db.Employees.AnyAsync(e => e.Id == id && e.IsActive, context.HttpContext.RequestAborted);
-                if (!active)
-                {
-                    context.HttpContext.Items[AccountInactiveKey] = true;
-                    context.Fail("Account is no longer active.");
-                }
-            },
-            // Answer with our usual ProblemDetails + code, so the screen can say why it logged the person out.
-            OnChallenge = async context =>
-            {
-                if (!context.HttpContext.Items.ContainsKey(AccountInactiveKey)) return;
-                context.HandleResponse();
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsJsonAsync(new ProblemDetails
-                {
-                    Status = StatusCodes.Status401Unauthorized,
-                    Title = "Your account is no longer active.",
-                    Extensions = { ["code"] = "ACCOUNT_INACTIVE" },
-                }, options: null, contentType: "application/problem+json");
-            },
-        };
     });
 builder.Services.AddAuthorization();
 
@@ -162,8 +133,4 @@ static void ConfigureTimeHttpClient(HttpClient client)
 }
 
 // Lets the test project start the app in memory (WebApplicationFactory).
-public partial class Program
-{
-    /// <summary>HttpContext.Items marker: the token was fine, but the account is deactivated (Plan 14).</summary>
-    private const string AccountInactiveKey = "AccountInactive";
-}
+public partial class Program;

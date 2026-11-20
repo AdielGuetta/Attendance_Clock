@@ -23,11 +23,9 @@ export default function App() {
 
   // If the server rejects the badge (expired after 60 min, or account deactivated), go back to login (EC-14).
   useEffect(() => {
-    setUnauthorizedHandler((code) => {
+    setUnauthorizedHandler(() => {
       setSession(null);
-      setNotice(code === "ACCOUNT_INACTIVE"
-        ? "Your account is no longer active. If you think this is a mistake, ask your manager."
-        : "Your session has ended. Please log in again.");
+      setNotice("Your session has ended. Please log in again.");
     });
   }, []);
 
