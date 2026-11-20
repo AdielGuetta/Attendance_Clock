@@ -2,14 +2,16 @@ import { useCallback, useEffect, useState } from "react";
 import { api, ApiError, type PunchStatus } from "../api";
 import { formatDay, formatElapsed, formatRecordedTime, formatZurichNow, isLikelyForgotten, openMinutes, parseServerTime } from "../time";
 import { useZurichClock } from "../useZurichClock";
+import RecentShifts from "./RecentShifts";
 
 type Banner = { kind: "success" | "error" | "info"; text: string } | null;
 
-export default function ClockScreen() {
+export default function ClockScreen({ onViewAll }: { onViewAll: () => void }) {
   const { now, error: clockError } = useZurichClock();
   const [status, setStatus] = useState<PunchStatus | null>(null);
   const [busy, setBusy] = useState(false);
   const [banner, setBanner] = useState<Banner>(null);
+  const [recentKey, setRecentKey] = useState(0); // bumped after every punch → the Recent shifts box reloads
 
   const refresh = useCallback(async () => {
     try { setStatus(await api.status()); } catch { /* 401 is handled globally; keep the last known status */ }
@@ -40,6 +42,7 @@ export default function ClockScreen() {
       setBanner({ kind: "error", text: messageFor(err) });
     } finally {
       await refresh(); // show the server's truth, whatever happened
+      setRecentKey((k) => k + 1);
       setBusy(false);
     }
   };
@@ -88,6 +91,8 @@ export default function ClockScreen() {
       </button>
 
       {banner && <div className={`banner ${banner.kind}`} role="status">{banner.text}</div>}
+
+      <RecentShifts todayIso={zurich?.dateIso ?? null} refreshKey={recentKey} onViewAll={onViewAll} />
 
       <p className="fineprint">
         The recorded time always comes from an official time service, never from this device's clock.

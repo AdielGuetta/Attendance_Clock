@@ -75,7 +75,7 @@ export default function App() {
         </div>
       </header>
       <main className="content">
-        {tab === "clock" ? <ClockScreen /> : tab === "week" ? <WeekScreen /> : <TeamScreen onDataChanged={refreshForgotten} />}
+        {tab === "clock" ? <ClockScreen onViewAll={() => setTab("week")} /> : tab === "week" ? <WeekScreen /> : <TeamScreen onDataChanged={refreshForgotten} />}
       </main>
     </div>
   );
