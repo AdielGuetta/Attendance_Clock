@@ -22,6 +22,75 @@ namespace AttendanceClock.Api.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("AttendanceClock.Api.Domain.CorrectionRequest", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int?>("DecidedByEmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTimeOffset?>("RequestedClockIn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("RequestedClockOut")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("ShiftId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(16)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DecidedByEmployeeId");
+
+                    b.HasIndex("ShiftId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_CorrectionRequests_OnePendingPerShift")
+                        .HasFilter("[Status] = 'Pending'");
+
+                    b.HasIndex("EmployeeId", "CreatedAt");
+
+                    b.HasIndex("Status", "CreatedAt");
+
+                    b.ToTable("CorrectionRequests", t =>
+                        {
+                            t.HasCheckConstraint("CK_CorrectionRequests_AsksForAChange", "[RequestedClockIn] IS NOT NULL OR [RequestedClockOut] IS NOT NULL");
+
+                            t.HasCheckConstraint("CK_CorrectionRequests_DecidedFields", "([Status] = 'Pending' AND [DecidedByEmployeeId] IS NULL AND [DecidedAt] IS NULL) OR ([Status] <> 'Pending' AND [DecidedByEmployeeId] IS NOT NULL AND [DecidedAt] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_CorrectionRequests_Status", "[Status] IN ('Pending', 'Approved', 'Rejected')");
+                        });
+                });
+
             modelBuilder.Entity("AttendanceClock.Api.Domain.Employee", b =>
                 {
                     b.Property<int>("Id")
@@ -172,6 +241,32 @@ namespace AttendanceClock.Api.Data.Migrations
                     b.HasIndex("ShiftId", "ChangedAt");
 
                     b.ToTable("ShiftAudits");
+                });
+
+            modelBuilder.Entity("AttendanceClock.Api.Domain.CorrectionRequest", b =>
+                {
+                    b.HasOne("AttendanceClock.Api.Domain.Employee", "DecidedBy")
+                        .WithMany()
+                        .HasForeignKey("DecidedByEmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AttendanceClock.Api.Domain.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AttendanceClock.Api.Domain.Shift", "Shift")
+                        .WithMany()
+                        .HasForeignKey("ShiftId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DecidedBy");
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Shift");
                 });
 
             modelBuilder.Entity("AttendanceClock.Api.Domain.Shift", b =>

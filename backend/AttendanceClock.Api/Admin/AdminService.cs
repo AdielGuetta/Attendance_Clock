@@ -11,9 +11,12 @@ public enum CorrectionError
 {
     None, NotFound, ReasonRequired, NothingToChange, InvalidTimeFormat, AmbiguousTime, TimeDoesNotExist,
     OffsetNotZurich, ClockOutNotAfterClockIn, TimeInFuture, OverlapsAnotherShift, ShiftModified,
+    // Plan 13: employee correction requests
+    ReasonTooLong, ShiftStillOpen, RequestAlreadyPending, RequestAlreadyDecided,
 }
 
-public sealed record CorrectionResult(CorrectionError Error, AdminShiftDto? Shift = null);
+/// <param name="At">When the correction was made (trusted clock); set on success.</param>
+public sealed record CorrectionResult(CorrectionError Error, AdminShiftDto? Shift = null, DateTimeOffset? At = null);
 
 /// <summary>Manager views and shift corrections (Plan 10, PRD F5–F7).</summary>
 public sealed class AdminService(AppDbContext db, ITrustedClock clock, ILogger<AdminService> logger)
@@ -92,21 +95,9 @@ public sealed class AdminService(AppDbContext db, ITrustedClock clock, ILogger<A
             return new(CorrectionError.ReasonRequired);
 
         // 3. Read the typed times with Zurich's rules (DST: ambiguous / non-existent hours).
-        DateTimeOffset? newIn = null, newOut = null;
-        foreach (var (text, isIn) in new[] { (request.ClockIn, true), (request.ClockOut, false) })
-        {
-            if (string.IsNullOrWhiteSpace(text)) continue;
-            var (value, problem) = ZurichTime.ParseManagerTime(text);
-            if (problem != ZurichTime.ManagerTimeProblem.None)
-                return new(problem switch
-                {
-                    ZurichTime.ManagerTimeProblem.Ambiguous => CorrectionError.AmbiguousTime,
-                    ZurichTime.ManagerTimeProblem.DoesNotExist => CorrectionError.TimeDoesNotExist,
-                    ZurichTime.ManagerTimeProblem.OffsetNotZurich => CorrectionError.OffsetNotZurich,
-                    _ => CorrectionError.InvalidTimeFormat,
-                });
-            if (isIn) newIn = value; else newOut = value;
-        }
+        var parseError = ParseTimes(request.ClockIn, request.ClockOut, out var newIn, out var newOut);
+        if (parseError != CorrectionError.None)
+            return new(parseError);
 
         var finalIn = newIn ?? shift.ClockIn;
         var finalOut = newOut ?? shift.ClockOut;
@@ -123,11 +114,7 @@ public sealed class AdminService(AppDbContext db, ITrustedClock clock, ILogger<A
         if (finalIn > now.Value || finalOut > now.Value)
             return new(CorrectionError.TimeInFuture);
 
-        var overlaps = await db.Shifts.AnyAsync(s =>
-            s.EmployeeId == shift.EmployeeId && s.Id != shift.Id &&
-            (finalOut == null || s.ClockIn < finalOut) &&
-            (s.ClockOut == null || s.ClockOut > finalIn), ct);
-        if (overlaps)
+        if (await OverlapsAnotherShiftAsync(shift.EmployeeId, shift.Id, finalIn, finalOut, ct))
             return new(CorrectionError.OverlapsAnotherShift);
 
         // 5. Apply, label and audit.
@@ -168,6 +155,38 @@ public sealed class AdminService(AppDbContext db, ITrustedClock clock, ILogger<A
 
         logger.LogInformation("Manager {ManagerId} corrected shift {ShiftId} of employee {EmployeeId}: {Reason}",
             managerId, shift.Id, shift.EmployeeId, reason);
-        return new(CorrectionError.None, AdminShiftDto.From(shift, shift.Employee.DisplayName, now.Value));
+        return new(CorrectionError.None, AdminShiftDto.From(shift, shift.Employee.DisplayName, now.Value), now.Value);
     }
+
+    /// <summary>
+    /// Reads typed Clock In / Clock Out with Zurich's rules (DST: ambiguous / non-existent hours). Empty = not given.
+    /// Shared by manager corrections and employee correction requests (Plan 13), so both read times the same way.
+    /// </summary>
+    public static CorrectionError ParseTimes(string? clockIn, string? clockOut, out DateTimeOffset? newIn, out DateTimeOffset? newOut)
+    {
+        newIn = null;
+        newOut = null;
+        foreach (var (text, isIn) in new[] { (clockIn, true), (clockOut, false) })
+        {
+            if (string.IsNullOrWhiteSpace(text)) continue;
+            var (value, problem) = ZurichTime.ParseManagerTime(text);
+            if (problem != ZurichTime.ManagerTimeProblem.None)
+                return problem switch
+                {
+                    ZurichTime.ManagerTimeProblem.Ambiguous => CorrectionError.AmbiguousTime,
+                    ZurichTime.ManagerTimeProblem.DoesNotExist => CorrectionError.TimeDoesNotExist,
+                    ZurichTime.ManagerTimeProblem.OffsetNotZurich => CorrectionError.OffsetNotZurich,
+                    _ => CorrectionError.InvalidTimeFormat,
+                };
+            if (isIn) newIn = value; else newOut = value;
+        }
+        return CorrectionError.None;
+    }
+
+    /// <summary>Would this shift, with these times, overlap another shift of the same employee? (EC-13)</summary>
+    public Task<bool> OverlapsAnotherShiftAsync(int employeeId, long shiftId, DateTimeOffset start, DateTimeOffset? end, CancellationToken ct) =>
+        db.Shifts.AnyAsync(s =>
+            s.EmployeeId == employeeId && s.Id != shiftId &&
+            (end == null || s.ClockIn < end) &&
+            (s.ClockOut == null || s.ClockOut > start), ct);
 }
