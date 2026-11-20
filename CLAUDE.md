@@ -2,6 +2,38 @@
 
 Guidance for Claude Code when working in this repository.
 
+## ⚠️ THIS IS "proj2", THE PLAYGROUND COPY (read first)
+This folder (`…\שעון\tamir-playground`) is a **practice copy** of the submitted project. The user calls it **proj2** and
+uses it to add features and learn how frontend, backend and database connect. See [PLAYGROUND.md](PLAYGROUND.md).
+
+- **Never touch the real project** in `…\שעון\tamir` (the submission, pushed to GitHub). Don't read from or write to it,
+  with **one exception**: the user's private notes there, listed under "The user's private notes" below.
+- **Ports here:** app **5175**, API **5081**, DB **1434**. Containers `playground-db/-api/-web`. The rest of this file and
+  the README still say 5174/5080/1433: in proj2, use the ports above.
+- **No git remote**: never add one, never push. Work on a branch per feature (`feature/…`), commit with the usual style;
+  merge into the `playground` branch only with the user's OK (`git branch -f playground HEAD && git switch playground`).
+- **Done so far in proj2:** "Recent shifts" box on the Clock screen (`frontend/src/recent.ts`, `screens/RecentShifts.tsx`),
+  on branch `feature/recent-shifts`.
+- **Feature ideas** (from the user's older app "Team Clock", a public demo at https://hybrid-clock.bountifulmallard2.chatgpt.site/),
+  in the agreed order:
+  1. **Work location** (Office / Remote, chosen before Clock In, stored per shift, shown everywhere). It goes through every
+     layer: UI → request body → validation → new column + migration → DTOs → all screens → tests.
+  2. **Employee correction requests** + manager approve/reject (approval goes through the existing audit trail).
+  3. Manager reports: summary tiles, by month/date, **CSV export**.
+  4. Employees tab (search, on/off-shift filter); greeting + design refresh.
+  Skip: profile photos, "online in the last 2 minutes".
+
+### The user's private notes (in the real project folder, never in git)
+- `…\שעון\tamir\ADI-NOTE.md`: after answering **any genuine question** from the user, add it under the right topic with a
+  1–2 sentence answer. Keep numbers sequential (renumber the following questions and the glossary "More" refs if needed);
+  add new key terms to the glossary. Edit it with the Edit tool only (never PowerShell Get-Content/Set-Content).
+- `…\שעון\tamir\INTERVIEW-NOTES.md`: optional entries for notable lessons (What / Why / "Say").
+
+### How to work with this user (same as always)
+The user is new to programming and is preparing for an interview. One step at a time: explain *what* and *why* in a few
+plain sentences (a kitchen or warehouse metaphor when it truly fits), **ask before acting**, show proof after each step
+(tests + a browser check on http://localhost:5174 → **5175** here), and say what's not done.
+
 ## Project
 **Attendance Clock**: employees clock in and out of shifts; managers review and correct shifts.
 Home assignment (deadline 2026-11-22 08:00). The full spec is in [docs/PRD.md](docs/PRD.md). Read it before
