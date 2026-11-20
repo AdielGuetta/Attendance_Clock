@@ -103,6 +103,11 @@ namespace AttendanceClock.Api.Data.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<string>("WorkLocation")
+                        .HasMaxLength(16)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(16)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId")
@@ -115,6 +120,8 @@ namespace AttendanceClock.Api.Data.Migrations
                     b.ToTable("Shifts", t =>
                         {
                             t.HasCheckConstraint("CK_Shifts_ClockOutAfterClockIn", "[ClockOut] IS NULL OR [ClockOut] > [ClockIn]");
+
+                            t.HasCheckConstraint("CK_Shifts_WorkLocation", "[WorkLocation] IS NULL OR [WorkLocation] IN ('Office', 'Remote')");
                         });
                 });
 

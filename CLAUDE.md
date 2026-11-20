@@ -13,7 +13,9 @@ uses it to add features and learn how frontend, backend and database connect. Se
 - **No git remote**: never add one, never push. Work on a branch per feature (`feature/…`), commit with the usual style;
   merge into the `playground` branch only with the user's OK (`git branch -f playground HEAD && git switch playground`).
 - **Done so far in proj2:** "Recent shifts" box on the Clock screen (`frontend/src/recent.ts`, `screens/RecentShifts.tsx`),
-  on branch `feature/recent-shifts`.
+  merged into `playground`. **Work location** (Plan 12, branch `feature/work-location`): `Shifts.WorkLocation` (NULL for
+  old shifts), Clock In body `{ location }` → 400 `INVALID_LOCATION`, `Punches/ClockInRequest.cs`, `frontend/src/location.ts`.
+  Tests: 67 backend, 20 frontend.
 - **Feature ideas** (from the user's older app "Team Clock", a public demo at https://hybrid-clock.bountifulmallard2.chatgpt.site/),
   in the agreed order:
   1. **Work location** (Office / Remote, chosen before Clock In, stored per shift, shown everywhere). It goes through every

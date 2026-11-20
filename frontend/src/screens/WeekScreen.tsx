@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError, type History, type Shift } from "../api";
+import { locationLabel } from "../location";
 import { addDays, formatDay, formatHM, parseServerTime, weekDates } from "../time";
 
 const FLAG_LABELS: Record<string, string> = {
@@ -89,6 +90,7 @@ function ShiftRow({ shift }: { shift: Shift }) {
         <span className="muted small"> {start.label}</span>
       </span>
       {shift.durationMinutes !== null && <span className="shift-len">{formatHM(shift.durationMinutes)}</span>}
+      <span className="location muted">{locationLabel(shift.workLocation)}</span>
       {shift.flags.map((f) => <span key={f} className="badge">{FLAG_LABELS[f] ?? f}</span>)}
     </div>
   );

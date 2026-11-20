@@ -1,6 +1,7 @@
 // Talks to the ASP.NET API. Every error comes back as ProblemDetails with a stable "code"
 // (e.g. ALREADY_ON_SHIFT), which the screens turn into friendly messages.
 
+import type { WorkLocation } from "./location";
 import { clearSession, getSession } from "./session";
 
 export type Employee = { id: number; userName: string; displayName: string; role: "Employee" | "Manager" };
@@ -15,6 +16,7 @@ export type Shift = {
   clockOutSource: string | null;
   durationMinutes: number | null;
   flags: string[];
+  workLocation: WorkLocation | null; // Plan 12; null = shift from before the feature
 };
 export type PunchStatus = { state: "OnShift" | "OffShift"; openShift: Shift | null };
 export type DayTotal = { date: string; totalMinutes: number; shiftCount: number };
@@ -72,7 +74,8 @@ export const api = {
   login: (userName: string, password: string) => request<LoginResponse>("POST", "/api/auth/login", { userName, password }),
   timeNow: () => request<TimeNow>("GET", "/api/time/now"),
   status: () => request<PunchStatus>("GET", "/api/punches/status"),
-  clockIn: () => request<Shift>("POST", "/api/punches/clock-in"),   // no body: the server takes the time (D-2)
+  // Only the location goes in the body, never a time: the server takes the time itself (D-2, Plan 12).
+  clockIn: (location: WorkLocation) => request<Shift>("POST", "/api/punches/clock-in", { location }),
   clockOut: () => request<Shift>("POST", "/api/punches/clock-out"),
   history: (from?: string, to?: string) =>
     request<History>("GET", from && to ? `/api/shifts/mine?from=${from}&to=${to}` : "/api/shifts/mine"),

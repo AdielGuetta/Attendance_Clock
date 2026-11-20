@@ -2,12 +2,14 @@ using AttendanceClock.Api.Auth;
 using AttendanceClock.Api.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace AttendanceClock.Api.Punches;
 
 /// <summary>
 /// Clock In / Clock Out / status for the logged-in employee (Plan 07).
-/// No request body: the client never sends a time; the server gets it from the trusted clock (PRD D-2).
+/// The client never sends a time; the server gets it from the trusted clock (PRD D-2).
+/// Clock In carries only the work location (Plan 12); Clock Out has no body.
 /// </summary>
 [ApiController]
 [Route("api/punches")]
@@ -15,13 +17,22 @@ namespace AttendanceClock.Api.Punches;
 public class PunchesController(ShiftService shifts) : ControllerBase
 {
     [HttpPost("clock-in")]
-    public async Task<IActionResult> ClockIn(CancellationToken ct)
+    public async Task<IActionResult> ClockIn(
+        // EmptyBodyBehavior.Allow: a missing body reaches our own check below, so the answer is our INVALID_LOCATION
+        // error with a clear message, not the framework's generic 400.
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] ClockInRequest? request,
+        CancellationToken ct)
     {
+        // Checked first: a bad request costs no database work and no call to the time API, and saves nothing.
+        if (!ClockInRequest.TryParseLocation(request?.Location, out var location))
+            return ApiProblem.Create(StatusCodes.Status400BadRequest, "INVALID_LOCATION",
+                "Choose where you're working.", "Send \"Office\" or \"Remote\" as the location.");
+
         var employeeId = User.GetEmployeeId();
         if (!await shifts.IsActiveEmployeeAsync(employeeId, ct))
             return InactiveAccount();
 
-        var result = await shifts.ClockInAsync(employeeId, ct);
+        var result = await shifts.ClockInAsync(employeeId, location, ct);
         return result.Outcome switch
         {
             PunchOutcome.Ok => StatusCode(StatusCodes.Status201Created, ShiftDto.From(result.Shift!)),

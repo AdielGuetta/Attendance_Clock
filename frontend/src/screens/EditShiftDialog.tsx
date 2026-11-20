@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api, ApiError, type AdminShift, type ShiftAudit } from "../api";
+import { locationLabel } from "../location";
 import { formatDay, formatRecordedTime, parseServerTime } from "../time";
 
 /** "2026-11-20T17:00:00+01:00" → "2026-11-20T17:00" (Zurich wall time, the format of a datetime-local input). */
@@ -46,7 +47,7 @@ export default function EditShiftDialog({ shift, onClose, onSaved }: { shift: Ad
     <div className="dialog-backdrop" role="dialog" aria-modal="true" aria-labelledby="edit-title" onClick={onClose}>
       <form className="card dialog" onSubmit={submit} onClick={(e) => e.stopPropagation()}>
         <h2 id="edit-title">Correct shift</h2>
-        <p className="muted">{shift.employeeName} · {formatDay(start.date)} · times in Zurich time</p>
+        <p className="muted">{shift.employeeName} · {formatDay(start.date)} · {locationLabel(shift.workLocation)} · times in Zurich time</p>
 
         <div className="two-col">
           <label>Clock In <input type="datetime-local" value={clockIn} onChange={(e) => setClockIn(e.target.value)} required /></label>

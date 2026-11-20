@@ -5,6 +5,7 @@ import { pickRecent, recentRange } from "./recent";
 const shift = (id: number, clockIn: string, clockOut: string | null = "2026-11-20T17:00:00+01:00"): Shift => ({
   id, zurichDate: clockIn.slice(0, 10), clockIn, clockInSource: "timeapi.io",
   clockOut, clockOutSource: clockOut ? "timeapi.io" : null, durationMinutes: clockOut ? 60 : null, flags: [],
+  workLocation: "Office",
 });
 
 const history = (shifts: Shift[], openShift: Shift | null = null): History =>

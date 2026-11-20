@@ -119,6 +119,8 @@ The UI shows a ticking Zurich clock for convenience. It's seeded from `GET /api/
 
 ### F2 Clock In / Clock Out
 - `POST /api/punches/clock-in`, `POST /api/punches/clock-out`. No body.
+  *Revised in Plan 12 (proj2): Clock In now takes `{ "location": "Office" | "Remote" }` (required, else 400
+  `INVALID_LOCATION`). Still no time in the body: any time a client adds is ignored (D-2). Clock Out has no body.*
   *(Revised in Plan 07: the optional `Idempotency-Key` header was dropped. The DB unique index already guarantees correctness,
   and a repeated punch gets a `409` that includes the current state, so the UI can refresh. ✅ Implemented in [Plan 07](plans/07-clock-in-out.md).)*
 - Clock in: allowed only if the employee has **no open shift**. Creates a shift with `ClockIn*` set.

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using AttendanceClock.Api.Domain;
 using AttendanceClock.Api.History;
 using AttendanceClock.Tests.Punches;
 
@@ -156,5 +157,18 @@ public class HistoryTests(PunchFixture fixture) : IClassFixture<PunchFixture>
         var response = await anonymous.GetAsync("/api/shifts/mine");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact] // 10 (Plan 12)
+    public async Task My_week_shows_each_shifts_work_location()
+    {
+        var (client, id) = await fixture.NewEmployeeClientAsync();
+        await fixture.AddShiftAsync(id, "2026-11-16T08:00:00+01:00", "2026-11-16T16:00:00+01:00", WorkLocation.Office);
+        await fixture.AddShiftAsync(id, "2026-11-17T08:00:00+01:00", "2026-11-17T16:00:00+01:00", WorkLocation.Remote);
+        await fixture.AddShiftAsync(id, "2026-11-18T08:00:00+01:00", "2026-11-18T16:00:00+01:00"); // before Plan 12
+
+        var history = await GetHistory(client, "?from=2026-11-16&to=2026-11-22");
+
+        Assert.Equal(["Office", "Remote", null], history!.Shifts.OrderBy(s => s.ClockIn).Select(s => s.WorkLocation));
     }
 }

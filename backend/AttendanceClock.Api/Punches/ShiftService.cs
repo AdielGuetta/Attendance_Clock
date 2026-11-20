@@ -27,7 +27,7 @@ public sealed class ShiftService(AppDbContext db, ITrustedClock clock, ILogger<S
     public Task<Shift?> GetOpenShiftAsync(int employeeId, CancellationToken ct) =>
         db.Shifts.AsNoTracking().FirstOrDefaultAsync(s => s.EmployeeId == employeeId && s.ClockOut == null, ct);
 
-    public async Task<PunchResult> ClockInAsync(int employeeId, CancellationToken ct)
+    public async Task<PunchResult> ClockInAsync(int employeeId, WorkLocation location, CancellationToken ct)
     {
         // 1. Already on shift? Answer before calling the time API, to save a call (EC-4).
         var open = await GetOpenShiftAsync(employeeId, ct);
@@ -49,7 +49,7 @@ public sealed class ShiftService(AppDbContext db, ITrustedClock clock, ILogger<S
         }
 
         // 4. Save. If a simultaneous request got there first, the unique index refuses this insert (EC-1/2).
-        var shift = new Shift { EmployeeId = employeeId, ClockIn = now.Value, ClockInSource = now.Source };
+        var shift = new Shift { EmployeeId = employeeId, ClockIn = now.Value, ClockInSource = now.Source, WorkLocation = location };
         db.Shifts.Add(shift);
         try
         {
@@ -62,7 +62,8 @@ public sealed class ShiftService(AppDbContext db, ITrustedClock clock, ILogger<S
             return new PunchResult(PunchOutcome.AlreadyOnShift, await GetOpenShiftAsync(employeeId, ct));
         }
 
-        logger.LogInformation("Employee {EmployeeId} clocked in at {Time:O} (source {Source})", employeeId, now.Value, now.Source);
+        logger.LogInformation("Employee {EmployeeId} clocked in at {Time:O} (source {Source}, {Location})",
+            employeeId, now.Value, now.Source, location);
         return new PunchResult(PunchOutcome.Ok, shift);
     }
 

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { api, ApiError, type PunchStatus } from "../api";
 import { formatDay, formatElapsed, formatRecordedTime, formatZurichNow, isLikelyForgotten, openMinutes, parseServerTime } from "../time";
 import { useZurichClock } from "../useZurichClock";
+import { loadLastLocation, locationLabel, saveLastLocation, WORK_LOCATIONS, type WorkLocation } from "../location";
+import { getSession } from "../session";
 import RecentShifts from "./RecentShifts";
 
 type Banner = { kind: "success" | "error" | "info"; text: string } | null;
@@ -12,6 +14,9 @@ export default function ClockScreen({ onViewAll }: { onViewAll: () => void }) {
   const [busy, setBusy] = useState(false);
   const [banner, setBanner] = useState<Banner>(null);
   const [recentKey, setRecentKey] = useState(0); // bumped after every punch → the Recent shifts box reloads
+  // Plan 12: where I'm working. Pre-selected from last time; the very first time nothing is selected, so it's a real choice.
+  const employeeId = getSession()?.employee.id ?? 0;
+  const [location, setLocation] = useState<WorkLocation | null>(() => loadLastLocation(employeeId));
 
   const refresh = useCallback(async () => {
     try { setStatus(await api.status()); } catch { /* 401 is handled globally; keep the last known status */ }
@@ -35,8 +40,10 @@ export default function ClockScreen({ onViewAll }: { onViewAll: () => void }) {
         const shift = await api.clockOut();
         setBanner({ kind: "success", text: `Clocked out at ${formatRecordedTime(shift.clockOut!)} · source ${shift.clockOutSource}` });
       } else {
-        const shift = await api.clockIn();
-        setBanner({ kind: "success", text: `Clocked in at ${formatRecordedTime(shift.clockIn)} · source ${shift.clockInSource}` });
+        if (!location) return; // the button is disabled until a location is picked; this is just a safety net
+        const shift = await api.clockIn(location);
+        saveLastLocation(employeeId, location);
+        setBanner({ kind: "success", text: `Clocked in at ${formatRecordedTime(shift.clockIn)} · ${locationLabel(shift.workLocation)} · source ${shift.clockInSource}` });
       }
     } catch (err) {
       setBanner({ kind: "error", text: messageFor(err) });
@@ -68,6 +75,7 @@ export default function ClockScreen({ onViewAll }: { onViewAll: () => void }) {
           <>
             <strong>On shift</strong> since {openIn.date === zurich?.dateIso ? "" : `${formatDay(openIn.date)}, `}{openIn.hm} {openIn.label}
             {elapsedMinutes !== null && <> · {formatElapsed(elapsedMinutes)}</>}
+            {open?.workLocation && <> · {locationLabel(open.workLocation)}</>}
           </>
         ) : (
           <strong>Off shift</strong>
@@ -82,12 +90,24 @@ export default function ClockScreen({ onViewAll }: { onViewAll: () => void }) {
         </div>
       )}
 
+      {status !== null && !onShift && (
+        <fieldset className="location-pick">
+          <legend>Where are you working?</legend>
+          {WORK_LOCATIONS.map((l) => (
+            <button key={l} type="button" className={l === location ? "selected" : ""} aria-pressed={l === location}
+              onClick={() => setLocation(l)} disabled={busy}>
+              {locationLabel(l)}
+            </button>
+          ))}
+        </fieldset>
+      )}
+
       <button
         className={`punch ${onShift ? "out" : "in"}`}
         onClick={punch}
-        disabled={busy || status === null}
+        disabled={busy || status === null || (!onShift && !location)}
       >
-        {busy ? "Recording…" : onShift ? "Clock Out" : "Clock In"}
+        {busy ? "Recording…" : onShift ? "Clock Out" : location ? "Clock In" : "Pick a location"}
       </button>
 
       {banner && <div className={`banner ${banner.kind}`} role="status">{banner.text}</div>}
@@ -110,6 +130,8 @@ function messageFor(err: unknown): string {
       return `${err.detail ?? err.title} Your status below is up to date.`;
     case "NOT_ON_SHIFT":
       return "You're not on shift: this shift was already closed (maybe from another device). Your status below is up to date.";
+    case "INVALID_LOCATION":
+      return "Choose Office or Remote, then clock in.";
     case "TIME_SOURCE_UNAVAILABLE":
     case "TIME_SOURCE_INCONSISTENT":
       return "Couldn't get the official time. Nothing was recorded. Please try again in a moment."; // fail closed (EC-8)

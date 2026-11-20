@@ -90,6 +90,16 @@ input:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
 }
 .punch:active:not(:disabled) { transform: scale(0.97); }
 .punch.in { background: var(--green); }
+.punch:disabled { opacity: 0.55; }
+/* Plan 12: Office / Remote choice, a two-button toggle above the Clock In button */
+.location-pick { display: flex; gap: 8px; border: 0; margin: 0; padding: 0; justify-content: center; flex-wrap: wrap; }
+.location-pick legend { width: 100%; margin-bottom: 8px; color: var(--muted); text-align: center; padding: 0; }
+.location-pick button { min-width: 130px; padding: 10px 16px; border-radius: 999px; border: 2px solid var(--line);
+  background: var(--card); color: var(--ink); font-size: 1rem; font-weight: 600; cursor: pointer; }
+.location-pick button.selected { border-color: var(--blue); background: var(--blue-soft); color: var(--blue); }
+.location { white-space: nowrap; }
+/* Wide tables scroll sideways on phones instead of being cut off at the panel edge. */
+.table-scroll { overflow-x: auto; }
 .punch.out { background: var(--red); }
 .clock-screen .banner { width: 100%; max-width: 480px; }
 
@@ -145,7 +155,9 @@ textarea { font: inherit; padding: 10px 12px; border-radius: 10px; border: 1px s
 
 @media (max-width: 520px) {
   .two-col { grid-template-columns: 1fr; }
-  .shift-table th:nth-child(5), .shift-table td:nth-child(5) { display: none; }
+  /* Hide the Team table's flags column on phones. A class, not "nth-child(5)": counting columns broke when
+     Plan 12 added the "Where" column (it hid the location instead of the flags). */
+  .shift-table .flags-col { display: none; }
   .topbar { padding: 10px 14px; gap: 10px; }
   .tabs { order: 3; width: 100%; margin-left: 0; }
   .tab { flex: 1; }

@@ -15,7 +15,8 @@ public sealed record ShiftDto(
     DateTimeOffset? ClockOut,
     string? ClockOutSource,
     int? DurationMinutes,
-    IReadOnlyList<string> Flags)
+    IReadOnlyList<string> Flags,
+    string? WorkLocation) // "Office" / "Remote"; null for shifts from before Plan 12
 {
     public static ShiftDto From(Shift s) => new(
         s.Id,
@@ -28,7 +29,8 @@ public sealed record ShiftDto(
         // Rounded to the NEAREST minute (30 s rounds up): fair in both directions, and history totals are
         // the sum of these values, so what the employee sees always adds up (Plan 08, DECISIONS #21).
         s.ClockOut is { } clockOut ? (int)Math.Round((clockOut - s.ClockIn).TotalMinutes, MidpointRounding.AwayFromZero) : null,
-        Enum.GetValues<ShiftFlags>().Where(f => f != ShiftFlags.None && s.Flags.HasFlag(f)).Select(f => f.ToString()).ToList());
+        Enum.GetValues<ShiftFlags>().Where(f => f != ShiftFlags.None && s.Flags.HasFlag(f)).Select(f => f.ToString()).ToList(),
+        s.WorkLocation?.ToString());
 }
 
 public sealed record PunchStatusDto(string State, ShiftDto? OpenShift);

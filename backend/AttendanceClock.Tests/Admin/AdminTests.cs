@@ -118,7 +118,7 @@ public class AdminTests(PunchFixture fixture) : IClassFixture<PunchFixture>
         var dto = await GetShift(manager, id);
 
         var response = await Correct(manager, id, null, "2026-11-19T17:00", Reason, dto.RowVersion);
-        var clockIn = await empClient.PostAsync("/api/punches/clock-in", null); // fake clock: 2026-11-20 18:00
+        var clockIn = await empClient.PostAsJsonAsync("/api/punches/clock-in", new { location = "Office" }); // fake clock: 2026-11-20 18:00
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(HttpStatusCode.Created, clockIn.StatusCode);
@@ -251,5 +251,22 @@ public class AdminTests(PunchFixture fixture) : IClassFixture<PunchFixture>
 
         Assert.Equal(["ClockIn", "ClockOut", "ClockOut"], audit.Select(a => a.Field));
         Assert.Equal(["Badge reader was broken", "Badge reader was broken", "Stayed for a delivery"], audit.Select(a => a.Reason));
+    }
+
+    [Fact] // 13 (Plan 12)
+    public async Task Manager_sees_each_shifts_work_location_and_none_for_old_shifts()
+    {
+        var manager = await Manager();
+        var (_, emp) = await fixture.NewEmployeeClientAsync();
+        var remote = await fixture.AddShiftAsync(emp, "2026-11-17T08:00:00+01:00", "2026-11-17T16:00:00+01:00", WorkLocation.Remote);
+        var old = await fixture.AddShiftAsync(emp, "2026-11-16T08:00:00+01:00", "2026-11-16T16:00:00+01:00"); // before Plan 12
+
+        Assert.Equal("Remote", (await GetShift(manager, remote)).WorkLocation);
+        Assert.Null((await GetShift(manager, old)).WorkLocation);
+
+        // A correction changes the times, never the location.
+        var dto = await GetShift(manager, remote);
+        await Correct(manager, remote, null, "2026-11-17T15:00", Reason, dto.RowVersion);
+        Assert.Equal("Remote", (await GetShift(manager, remote)).WorkLocation);
     }
 }

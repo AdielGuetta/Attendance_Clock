@@ -27,10 +27,23 @@ public class Shift
 
     public string? ClockOutSource { get; set; }
 
+    /// <summary>
+    /// Where the employee worked, chosen before Clock In (Plan 12). Null only for shifts recorded before this
+    /// feature existed: we don't know where those were worked, so we don't invent a value.
+    /// </summary>
+    public WorkLocation? WorkLocation { get; set; }
+
     public ShiftFlags Flags { get; set; } = ShiftFlags.None;
 
     /// <summary>Changes automatically on every update. Used to detect two people editing the same shift at once.</summary>
     public byte[] RowVersion { get; set; } = [];
+}
+
+/// <summary>Where a shift was worked (Plan 12). Stored as text ("Office"/"Remote") so it reads clearly in SQL.</summary>
+public enum WorkLocation
+{
+    Office,
+    Remote,
 }
 
 /// <summary>Reasons a manager should look at a shift. A shift can have several at once.</summary>

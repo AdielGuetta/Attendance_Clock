@@ -12,10 +12,13 @@ public class ShiftConfiguration : IEntityTypeConfiguration<Shift>
         {
             // The database itself refuses a Clock Out that isn't after the Clock In (PRD EC-9).
             t.HasCheckConstraint("CK_Shifts_ClockOutAfterClockIn", "[ClockOut] IS NULL OR [ClockOut] > [ClockIn]");
+            // Only the known locations, even if someone writes SQL by hand (Plan 12). NULL = shift from before the feature.
+            t.HasCheckConstraint("CK_Shifts_WorkLocation", "[WorkLocation] IS NULL OR [WorkLocation] IN ('Office', 'Remote')");
         });
 
         s.Property(x => x.ClockInSource).HasMaxLength(32).IsUnicode(false);
         s.Property(x => x.ClockOutSource).HasMaxLength(32).IsUnicode(false);
+        s.Property(x => x.WorkLocation).HasConversion<string>().HasMaxLength(16).IsUnicode(false);
 
         s.Property(x => x.RowVersion).IsRowVersion();
 

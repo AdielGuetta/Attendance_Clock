@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, type Shift } from "../api";
+import { locationLabel } from "../location";
 import { pickRecent, recentRange, RECENT_DAYS } from "../recent";
 import { formatDay, formatHM, parseServerTime } from "../time";
 
@@ -39,7 +40,7 @@ export default function RecentShifts({ todayIso, refreshKey, onViewAll }: {
         : shifts.length === 0 ? <p className="muted">No shifts in the last {RECENT_DAYS} days yet.</p>
         : (
           <table className="shift-table">
-            <thead><tr><th>Day</th><th>In → Out</th><th>Length</th><th></th></tr></thead>
+            <thead><tr><th>Day</th><th>In → Out</th><th>Length</th><th>Where</th><th></th></tr></thead>
             <tbody>
               {shifts.map((s) => {
                 const a = parseServerTime(s.clockIn);
@@ -52,6 +53,7 @@ export default function RecentShifts({ todayIso, refreshKey, onViewAll }: {
                       <span className="muted small"> {a.label}</span>
                     </td>
                     <td className="nums">{s.durationMinutes !== null ? formatHM(s.durationMinutes) : ""}</td>
+                    <td className="location">{locationLabel(s.workLocation)}</td>
                     <td>{s.flags.filter((f) => FLAG_LABELS[f]).map((f) => <span key={f} className="badge">{FLAG_LABELS[f]}</span>)}</td>
                   </tr>
                 );

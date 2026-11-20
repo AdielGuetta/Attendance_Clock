@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api, ApiError, type AdminShift, type EmployeeSummary, type OnShift } from "../api";
 import { addDays, formatDay, formatElapsed, formatHM, parseServerTime, weekDates } from "../time";
 import { useZurichClock } from "../useZurichClock";
+import { locationLabel } from "../location";
 import EditShiftDialog from "./EditShiftDialog";
 
 export const FLAG_LABELS: Record<string, string> = {
@@ -82,6 +83,7 @@ export default function TeamScreen({ onDataChanged }: { onDataChanged?: () => vo
                   <span className="who">{s.employeeName}</span>
                   <span className="muted">since {formatDay(start.date)}, {start.hm} {start.label}</span>
                   {openMin !== null && <span>{formatElapsed(openMin)}</span>}
+                  <span className="location">{locationLabel(s.workLocation)}</span>
                   {s.flags.map((f) => <span key={f} className="badge">{FLAG_LABELS[f] ?? f}</span>)}
                   <button className="ghost small-btn" onClick={() => setEditing(s)}>Edit</button>
                 </li>
@@ -106,8 +108,8 @@ export default function TeamScreen({ onDataChanged }: { onDataChanged?: () => vo
         </div>
 
         {shifts === null ? <p className="muted">Loading…</p> : shifts.length === 0 ? <p className="muted">No shifts in this week.</p> : (
-          <table className="shift-table">
-            <thead><tr><th>Day</th><th>Employee</th><th>In → Out</th><th>Length</th><th></th><th></th></tr></thead>
+          <div className="table-scroll"><table className="shift-table">
+            <thead><tr><th>Day</th><th>Employee</th><th>In → Out</th><th>Length</th><th>Where</th><th className="flags-col"></th><th></th></tr></thead>
             <tbody>
               {monday && weekDates(monday).flatMap((date) => shifts.filter((s) => s.zurichDate === date).map((s) => {
                 const a = parseServerTime(s.clockIn);
@@ -122,13 +124,14 @@ export default function TeamScreen({ onDataChanged }: { onDataChanged?: () => vo
                       <span className="muted small"> {a.label}</span>
                     </td>
                     <td className="nums">{s.durationMinutes !== null ? formatHM(s.durationMinutes) : ""}</td>
-                    <td>{s.flags.map((f) => <span key={f} className="badge">{FLAG_LABELS[f] ?? f}</span>)}</td>
+                    <td className="location">{locationLabel(s.workLocation)}</td>
+                    <td className="flags-col">{s.flags.map((f) => <span key={f} className="badge">{FLAG_LABELS[f] ?? f}</span>)}</td>
                     <td><button className="ghost small-btn" onClick={() => setEditing(s)}>Edit</button></td>
                   </tr>
                 );
               }))}
             </tbody>
-          </table>
+          </table></div>
         )}
         <p className="fineprint">Times in Zurich time. ✎ = time entered by a manager (a manual correction, with a recorded reason).</p>
       </div>

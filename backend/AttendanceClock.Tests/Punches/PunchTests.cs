@@ -50,7 +50,8 @@ public sealed class PunchFixture : IDisposable
     }
 
     /// <summary>Puts a shift straight into the test database (for history tests that need shifts on many days).</summary>
-    public async Task<long> AddShiftAsync(int employeeId, string clockIn, string? clockOut = null)
+    /// <param name="location">Null = a shift recorded before Plan 12 (no location known).</param>
+    public async Task<long> AddShiftAsync(int employeeId, string clockIn, string? clockOut = null, WorkLocation? location = null)
     {
         using var scope = Factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -61,6 +62,7 @@ public sealed class PunchFixture : IDisposable
             ClockInSource = "test-data",
             ClockOut = clockOut is null ? null : DateTimeOffset.Parse(clockOut),
             ClockOutSource = clockOut is null ? null : "test-data",
+            WorkLocation = location,
         };
         db.Shifts.Add(shift);
         await db.SaveChangesAsync();
@@ -86,7 +88,13 @@ public class PunchTests(PunchFixture fixture) : IClassFixture<PunchFixture>
 {
     private FakeTrustedClock Clock => fixture.Clock;
 
-    private static Task<HttpResponseMessage> ClockIn(HttpClient c) => c.PostAsync("/api/punches/clock-in", null);
+    // Since Plan 12 Clock In carries the work location (and only that: never a time).
+    private static Task<HttpResponseMessage> ClockIn(HttpClient c, string location = "Office") =>
+        c.PostAsJsonAsync("/api/punches/clock-in", new { location });
+
+    private static Task<HttpResponseMessage> ClockInRawJson(HttpClient c, string? json) =>
+        c.PostAsync("/api/punches/clock-in",
+            json is null ? null : new StringContent(json, System.Text.Encoding.UTF8, "application/json"));
     private static Task<HttpResponseMessage> ClockOut(HttpClient c) => c.PostAsync("/api/punches/clock-out", null);
 
     private static async Task<string?> ErrorCode(HttpResponseMessage response)
@@ -259,5 +267,53 @@ public class PunchTests(PunchFixture fixture) : IClassFixture<PunchFixture>
 
         Assert.Equal("OnShift", status!.State);
         Assert.Equal(DateTimeOffset.Parse("2026-11-20T07:45:00+01:00"), status.OpenShift!.ClockIn);
+    }
+
+    [Fact] // 13 (Plan 12)
+    public async Task Work_location_is_saved_with_the_shift_and_kept_after_clock_out()
+    {
+        var (client, _) = await fixture.NewEmployeeClientAsync();
+        Clock.SetNow("2026-11-20T08:00:00+01:00");
+
+        var clockIn = await ClockIn(client, "remote"); // any letter case is accepted
+        var status = await client.GetFromJsonAsync<PunchStatusDto>("/api/punches/status");
+        Clock.SetNow("2026-11-20T12:00:00+01:00");
+        var closed = await (await ClockOut(client)).Content.ReadFromJsonAsync<ShiftDto>();
+
+        Assert.Equal(HttpStatusCode.Created, clockIn.StatusCode);
+        Assert.Equal("Remote", (await clockIn.Content.ReadFromJsonAsync<ShiftDto>())!.WorkLocation);
+        Assert.Equal("Remote", status!.OpenShift!.WorkLocation);
+        Assert.Equal("Remote", closed!.WorkLocation);
+    }
+
+    [Theory] // 14 (Plan 12)
+    [InlineData(null)]                    // no body at all
+    [InlineData("{}")]                    // body without a location
+    [InlineData("""{"location":""}""")]
+    [InlineData("""{"location":"Moon"}""")]
+    [InlineData("""{"location":"1"}""")]  // a number would slip through a plain Enum.TryParse
+    public async Task Missing_or_unknown_location_is_refused_before_calling_the_time_api(string? json)
+    {
+        var (client, employeeId) = await fixture.NewEmployeeClientAsync();
+        Clock.SimulateOutage(); // if the time API were called, we'd get 503 instead of 400
+
+        var response = await ClockInRawJson(client, json);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("INVALID_LOCATION", await ErrorCode(response));
+        Assert.Equal(0, await fixture.CountShiftsAsync(employeeId));
+    }
+
+    [Fact] // 15 (Plan 12, D-2)
+    public async Task A_time_sent_by_the_client_is_ignored()
+    {
+        var (client, _) = await fixture.NewEmployeeClientAsync();
+        Clock.SetNow("2026-11-20T09:00:00+01:00");
+
+        var response = await ClockInRawJson(client, """{"location":"Office","clockIn":"2020-01-01T06:00:00+01:00"}""");
+
+        var shift = await response.Content.ReadFromJsonAsync<ShiftDto>();
+        Assert.Equal(DateTimeOffset.Parse("2026-11-20T09:00:00+01:00"), shift!.ClockIn); // the trusted clock's time
+        Assert.Equal("Office", shift.WorkLocation);
     }
 }

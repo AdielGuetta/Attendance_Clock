@@ -17,7 +17,8 @@ public sealed record AdminShiftDto(
     string? ClockOutSource,
     int? DurationMinutes,
     IReadOnlyList<string> Flags,
-    string RowVersion)
+    string RowVersion,
+    string? WorkLocation) // shown to the manager, not editable (Plan 12)
 {
     public static AdminShiftDto From(Shift s, string employeeName, DateTimeOffset? now)
     {
@@ -26,7 +27,7 @@ public sealed record AdminShiftDto(
         if (s.ClockOut is null && now is { } n && n - s.ClockIn > ShiftService.TooLongThreshold)
             flags.Add(nameof(ShiftFlags.ForgotClockOut)); // computed against the trusted "now" (PRD F7)
         return new AdminShiftDto(s.Id, s.EmployeeId, employeeName, dto.ZurichDate, s.ClockIn, s.ClockInSource,
-            s.ClockOut, s.ClockOutSource, dto.DurationMinutes, flags, Convert.ToBase64String(s.RowVersion));
+            s.ClockOut, s.ClockOutSource, dto.DurationMinutes, flags, Convert.ToBase64String(s.RowVersion), dto.WorkLocation);
     }
 }
 
