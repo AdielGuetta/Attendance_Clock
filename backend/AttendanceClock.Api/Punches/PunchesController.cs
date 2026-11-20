@@ -28,11 +28,8 @@ public class PunchesController(ShiftService shifts) : ControllerBase
             return ApiProblem.Create(StatusCodes.Status400BadRequest, "INVALID_LOCATION",
                 "Choose where you're working.", "Send \"Office\" or \"Remote\" as the location.");
 
-        var employeeId = User.GetEmployeeId();
-        if (!await shifts.IsActiveEmployeeAsync(employeeId, ct))
-            return InactiveAccount();
-
-        var result = await shifts.ClockInAsync(employeeId, location, ct);
+        // A deactivated account never gets here: it's refused for every endpoint when the login badge is checked (Plan 14).
+        var result = await shifts.ClockInAsync(User.GetEmployeeId(), location, ct);
         return result.Outcome switch
         {
             PunchOutcome.Ok => StatusCode(StatusCodes.Status201Created, ShiftDto.From(result.Shift!)),
@@ -44,19 +41,22 @@ public class PunchesController(ShiftService shifts) : ControllerBase
         };
     }
 
+    /// <param name="request">Optional <c>{ "shiftId": 42 }</c>: the shift the screen shows (Plan 14). If a different
+    /// shift is open now (an old tab), the punch is refused instead of closing the wrong shift. No body = as before.</param>
     [HttpPost("clock-out")]
-    public async Task<IActionResult> ClockOut(CancellationToken ct)
+    public async Task<IActionResult> ClockOut(
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] ClockOutRequest? request, CancellationToken ct)
     {
-        var employeeId = User.GetEmployeeId();
-        if (!await shifts.IsActiveEmployeeAsync(employeeId, ct))
-            return InactiveAccount();
-
-        var result = await shifts.ClockOutAsync(employeeId, ct);
+        var result = await shifts.ClockOutAsync(User.GetEmployeeId(), request?.ShiftId, ct);
         return result.Outcome switch
         {
             PunchOutcome.Ok => Ok(ShiftDto.From(result.Shift!)),
             PunchOutcome.NotOnShift => ApiProblem.Create(StatusCodes.Status409Conflict, "NOT_ON_SHIFT",
                 "You're not on shift.", "There's no open shift to clock out of. Refresh to see your current status."),
+            PunchOutcome.ShiftChanged => ApiProblem.Create(StatusCodes.Status409Conflict, "SHIFT_CHANGED",
+                "This screen was out of date.",
+                $"The shift it showed is already closed. You're on a newer shift since {result.Shift!.ClockIn:yyyy-MM-dd HH:mm} (Zurich time); nothing was changed.",
+                new Dictionary<string, object?> { ["openShift"] = ShiftDto.From(result.Shift) }),
             _ => TimeInconsistent(),
         };
     }
@@ -70,9 +70,6 @@ public class PunchesController(ShiftService shifts) : ControllerBase
             ? new PunchStatusDto("OffShift", null)
             : new PunchStatusDto("OnShift", ShiftDto.From(open));
     }
-
-    private static ObjectResult InactiveAccount() => ApiProblem.Create(StatusCodes.Status401Unauthorized,
-        "ACCOUNT_INACTIVE", "Your account is no longer active.");
 
     private static ObjectResult TimeInconsistent() => ApiProblem.Create(StatusCodes.Status503ServiceUnavailable,
         "TIME_SOURCE_INCONSISTENT", "The time service returned an inconsistent time.",

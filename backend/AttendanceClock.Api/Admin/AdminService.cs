@@ -114,6 +114,12 @@ public sealed class AdminService(AppDbContext db, ITrustedClock clock, ILogger<A
         if (finalIn > now.Value || finalOut > now.Value)
             return new(CorrectionError.TimeInFuture);
 
+        // One change per employee at a time (Plan 14): two managers correcting two DIFFERENT shifts of this employee at the
+        // same moment would each pass the overlap check before the other saves. With the lock, the second one waits,
+        // then sees the first one's result. A request approval (Plan 13) already runs in its own transaction: reuse it.
+        await using var ownTransaction = db.Database.CurrentTransaction is null ? await db.Database.BeginTransactionAsync(ct) : null;
+        await db.LockEmployeeAsync(shift.EmployeeId, ct);
+
         if (await OverlapsAnotherShiftAsync(shift.EmployeeId, shift.Id, finalIn, finalOut, ct))
             return new(CorrectionError.OverlapsAnotherShift);
 
@@ -146,6 +152,8 @@ public sealed class AdminService(AppDbContext db, ITrustedClock clock, ILogger<A
         try
         {
             await db.SaveChangesAsync(ct);
+            if (ownTransaction is not null)
+                await ownTransaction.CommitAsync(ct); // releases the employee lock
         }
         catch (DbUpdateConcurrencyException)
         {

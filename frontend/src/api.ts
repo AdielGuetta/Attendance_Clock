@@ -48,8 +48,9 @@ export class ApiError extends Error {
 }
 
 /** Called when the server says the login badge is no longer valid (expired, tampered, account deactivated). */
-let onUnauthorized: () => void = () => {};
-export function setUnauthorizedHandler(handler: () => void) {
+// `code` is the server's reason, e.g. "ACCOUNT_INACTIVE" (Plan 14: checked on every request).
+let onUnauthorized: (code?: string) => void = () => {};
+export function setUnauthorizedHandler(handler: (code?: string) => void) {
   onUnauthorized = handler;
 }
 
@@ -76,7 +77,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 
   if (response.status === 401 && path !== "/api/auth/login") {
     clearSession();
-    onUnauthorized();
+    onUnauthorized(problem.code);
   }
   throw new ApiError(response.status, problem.code, problem.title ?? `Request failed (${response.status})`, problem.detail);
 }
@@ -87,7 +88,8 @@ export const api = {
   status: () => request<PunchStatus>("GET", "/api/punches/status"),
   // Only the location goes in the body, never a time: the server takes the time itself (D-2, Plan 12).
   clockIn: (location: WorkLocation) => request<Shift>("POST", "/api/punches/clock-in", { location }),
-  clockOut: () => request<Shift>("POST", "/api/punches/clock-out"),
+  // The shift this screen shows (Plan 14): if a different one is open now (old tab), the server refuses: SHIFT_CHANGED.
+  clockOut: (shiftId: number) => request<Shift>("POST", "/api/punches/clock-out", { shiftId }),
   history: (from?: string, to?: string) =>
     request<History>("GET", from && to ? `/api/shifts/mine?from=${from}&to=${to}` : "/api/shifts/mine"),
   requestCorrection: (shiftId: number, body: NewCorrectionRequest) =>

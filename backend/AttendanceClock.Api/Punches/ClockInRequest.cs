@@ -3,6 +3,12 @@ using AttendanceClock.Api.Domain;
 namespace AttendanceClock.Api.Punches;
 
 /// <summary>
+/// Optional body of <c>POST /api/punches/clock-out</c> (Plan 14): the id of the shift the screen shows, so an old tab
+/// can't close a newer shift by mistake. Still no time: the server takes it from the trusted clock (PRD D-2).
+/// </summary>
+public sealed record ClockOutRequest(long? ShiftId);
+
+/// <summary>
 /// Body of <c>POST /api/punches/clock-in</c> (Plan 12): only where the employee is working.
 /// There is deliberately NO time field. Any time a client adds to the JSON is ignored, because the
 /// server always takes the time from the trusted clock (PRD D-2).

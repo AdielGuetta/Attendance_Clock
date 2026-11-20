@@ -37,7 +37,7 @@ export default function ClockScreen({ onViewAll }: { onViewAll: () => void }) {
     setBanner(null);
     try {
       if (onShift) {
-        const shift = await api.clockOut();
+        const shift = await api.clockOut(status!.openShift!.id); // the shift THIS screen shows (Plan 14)
         setBanner({ kind: "success", text: `Clocked out at ${formatRecordedTime(shift.clockOut!)} · source ${shift.clockOutSource}` });
       } else {
         if (!location) return; // the button is disabled until a location is picked; this is just a safety net
@@ -130,6 +130,9 @@ function messageFor(err: unknown): string {
       return `${err.detail ?? err.title} Your status below is up to date.`;
     case "NOT_ON_SHIFT":
       return "You're not on shift: this shift was already closed (maybe from another device). Your status below is up to date.";
+    // Plan 14: this tab still showed a shift that was closed elsewhere, and a newer one is open. Nothing was changed.
+    case "SHIFT_CHANGED":
+      return `${err.detail ?? err.title} Your status below is up to date; press Clock Out again if you want to end the current shift.`;
     case "INVALID_LOCATION":
       return "Choose Office or Remote, then clock in.";
     case "TIME_SOURCE_UNAVAILABLE":

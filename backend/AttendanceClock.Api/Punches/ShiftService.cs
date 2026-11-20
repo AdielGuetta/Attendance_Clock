@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 namespace AttendanceClock.Api.Punches;
 
 /// <summary>What happened when an employee punched.</summary>
-public enum PunchOutcome { Ok, AlreadyOnShift, NotOnShift, TimeInconsistent }
+public enum PunchOutcome { Ok, AlreadyOnShift, NotOnShift, TimeInconsistent, ShiftChanged }
 
-/// <param name="Shift">The saved shift (Ok), or the shift that's already open (AlreadyOnShift).</param>
+/// <param name="Shift">The saved shift (Ok), or the shift that's open now (AlreadyOnShift, ShiftChanged).</param>
 public sealed record PunchResult(PunchOutcome Outcome, Shift? Shift = null);
 
 /// <summary>
@@ -20,9 +20,6 @@ public sealed class ShiftService(AppDbContext db, ITrustedClock clock, ILogger<S
 {
     /// <summary>Shifts longer than this are flagged for the manager (PRD F7).</summary>
     public static readonly TimeSpan TooLongThreshold = TimeSpan.FromHours(14);
-
-    public Task<bool> IsActiveEmployeeAsync(int employeeId, CancellationToken ct) =>
-        db.Employees.AnyAsync(e => e.Id == employeeId && e.IsActive, ct);
 
     public Task<Shift?> GetOpenShiftAsync(int employeeId, CancellationToken ct) =>
         db.Shifts.AsNoTracking().FirstOrDefaultAsync(s => s.EmployeeId == employeeId && s.ClockOut == null, ct);
@@ -36,6 +33,11 @@ public sealed class ShiftService(AppDbContext db, ITrustedClock clock, ILogger<S
 
         // 2. Official time. Throws TimeSourceUnavailableException → 503, nothing saved (PRD D-5).
         var now = await clock.GetZurichNowAsync(ct);
+
+        // 2b. One change per employee at a time (Plan 14): a manager correcting this employee's last shift right now
+        //     can't slip past the check below. Taken after the time call, so the lock is never held while waiting on it.
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+        await db.LockEmployeeAsync(employeeId, ct);
 
         // 3. Must be after the previous shift ended, so providers that disagree slightly can't create overlapping shifts.
         var lastClockOut = await db.Shifts
@@ -54,6 +56,7 @@ public sealed class ShiftService(AppDbContext db, ITrustedClock clock, ILogger<S
         try
         {
             await db.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct); // releases the employee lock
         }
         catch (DbUpdateException ex) when (IsUniqueIndexViolation(ex))
         {
@@ -67,12 +70,18 @@ public sealed class ShiftService(AppDbContext db, ITrustedClock clock, ILogger<S
         return new PunchResult(PunchOutcome.Ok, shift);
     }
 
-    public async Task<PunchResult> ClockOutAsync(int employeeId, CancellationToken ct)
+    /// <param name="expectedShiftId">The shift the screen shows (Plan 14); null = whichever is open (as before).</param>
+    public async Task<PunchResult> ClockOutAsync(int employeeId, long? expectedShiftId, CancellationToken ct)
     {
         // 1. Is there an open shift to close? (EC-3)
         var shift = await db.Shifts.FirstOrDefaultAsync(s => s.EmployeeId == employeeId && s.ClockOut == null, ct);
         if (shift is null)
             return new PunchResult(PunchOutcome.NotOnShift);
+
+        // 1b. Is it the one the screen shows? An old tab may still show a shift that was closed elsewhere while a newer
+        //     one started: closing the newer one by mistake would cut it short. Refuse, before calling the time API.
+        if (expectedShiftId is { } expected && expected != shift.Id)
+            return new PunchResult(PunchOutcome.ShiftChanged, shift);
 
         // 2. Official time (503 if unavailable).
         var now = await clock.GetZurichNowAsync(ct);
