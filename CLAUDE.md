@@ -9,8 +9,9 @@ uses it to add features and learn how frontend, backend and database connect. Se
 - **Never touch the real project** in `…\שעון\tamir` (the submission, pushed to GitHub), **including the user's private
   files there**. Don't read from or write to it at all. proj2 is a **complete copy**: since 2026-11-21 it has its own
   copies of the private files (below), and every change, notes included, happens here.
-- **Ports here:** app **5175**, API **5081**, DB **1434**. Containers `playground-db/-api/-web`. The rest of this file and
-  the README still say 5174/5080/1433: in proj2, use the ports above.
+- **Ports here:** app **5175**, API **5081**, DB **1434**. Containers `playground-db/-api/-web`. The rest of this file
+  still says 5174/5080/1433 (the original's): in proj2, use the ports above. README, DECISIONS (#37–#48), docs/TESTS,
+  WORKING-WITH-CLAUDE and TECH-STACK were updated for proj2 on 2026-11-21.
 - **No git remote**: never add one, never push. Work on a branch per feature (`feature/…`), commit with the usual style;
   merge into the `playground` branch only with the user's OK (`git branch -f playground HEAD && git switch playground`).
 - **Done so far in proj2:** "Recent shifts" box on the Clock screen (`frontend/src/recent.ts`, `screens/RecentShifts.tsx`),

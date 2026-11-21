@@ -24,6 +24,13 @@ Components marked **(required)** were fixed by the assignment. Their pros and co
 | Docker Compose | Local environment | One command, any OS | Extra layer; slower on Apple-chip Macs | None for end users; easy for reviewers |
 | xUnit + in-memory API tests | Automated tests | Catches regressions in seconds | Takes time to write | Indirect: features keep working |
 
+> **proj2 (practice copy): no new components.** Work location, correction requests, reports and the safety fixes are all
+> built with the stack above, with no new libraries or services. What they newly *use* from it:
+> **SQL Server** transactions and a row lock (`UPDLOCK`: one change per employee at a time) and a filtered unique index
+> (one waiting request per shift); **EF Core** migrations for the new column and table; **C#** to build the CSV file
+> (no CSV library: the quoting and the formula guard are a few lines, fully tested); and the **browser's** download of a
+> fetched file ("blob"), so the login token can travel with it. The PDF version below still shows the submitted project.
+
 ---
 
 ## Backend: ASP.NET Core on .NET 10 (LTS) **(required)**

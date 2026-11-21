@@ -32,6 +32,10 @@ PRD (what & why) → plan file for the step → I review/ask questions → appro
 - **Diagnosing environment problems:** Smart App Control, a port clash with another local project, and the merge incident
   (read from container logs).
 - **Verification:** besides the tests, it drove the real app in a browser (stale tab, second device, phone size, manager flow).
+- **proj2 (practice copy):** the same loop for four more features, built on top of the submitted version: a plan for my
+  approval (plans 12–15, which I changed where I disagreed), a branch per feature, tests + a browser walkthrough, and a
+  merge into the `playground` branch only on my OK. It also reviewed edge cases I listed against the actual code, and
+  I chose which to fix (DECISIONS #45–#48).
 
 ## Where it had to be corrected (by me, or by evidence)
 | What happened | How it was caught | Fix |
@@ -45,6 +49,14 @@ PRD (what & why) → plan file for the step → I review/ask questions → appro
 | **Merge incident:** switching to `main` before merging briefly deleted `frontend/`, so Vite restarted with default settings and the app went down | App unreachable; container log | Restarted; new merge procedure in CLAUDE.md. Then **I asked for a root fix**: fail fast instead of silent defaults (DECISIONS #35), re-tested by re-creating the incident |
 | "Do we auto-stop shifts after 14 h?": the system only flagged them, deep in the manager screen | My question | Kept "never invent a time", but added an employee banner + a manager badge (Plan 11) |
 | The README test command could collide with the running server's build | Final review | A separate on-demand `tests` container |
+| **proj2** · A phone-only CSS rule hid "column 5"; the new location column took that place, so phones hid the location instead of the flags | Claude's own browser check at phone width | The column gets a class instead of a position |
+| **proj2** · The last work location was remembered per device: on a shared computer, the next person got someone else's choice | Browser check (the manager saw dana's "Remote") | Remembered per user (DECISIONS #38) |
+| **proj2** · Claude kept writing my private notes into the **real** project folder, because its hand-over said so | I clarified: the original stays completely untouched | Notes copied into proj2 (kept out of git), the real file restored, CLAUDE.md changed |
+| **proj2** · The date-time box showed "05:00 PM" while the app shows "17:00", and later the focus ring overlapped the clock button | I noticed both | 24-hour time box with a roller (DECISIONS #44); box and button made one unit |
+| **proj2** · A fix request could move a shift to another day without the manager noticing | My question | New length, moved day and "Over 14 h" shown to both sides (DECISIONS #43) |
+| **proj2** · I asked "can anyone with the link see it?" | Claude checked the Docker ports | They were open to the whole Wi-Fi (database included); a fix limiting them to this computer is on its own branch |
+| **proj2** · "Check *active* on every request" was built as planned, then I cancelled it | My decision after seeing it | Undone as its own commit, so the history shows both |
+| **proj2** · Is the new race test meaningful, or would it pass anyway? | Claude switched the lock off and ran it | It failed (both corrections went through), so it really detects the race (DECISIONS #46) |
 
 ## What I'd do differently
 - Write plan files from step 1 (01–03 are retrospective).
