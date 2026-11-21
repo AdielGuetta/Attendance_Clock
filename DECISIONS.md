@@ -34,6 +34,10 @@ each step in [docs/plans/](docs/plans/).
 | 17 | Login badge (JWT) expires after 60 minutes | It can't be cancelled early, so its life is short |
 | 18 | One change per employee at a time (a lock) | Two managers fixing the same person at once can't create overlapping shifts |
 
+## Edge cases
+Every edge case (two clicks at once, overnight shifts, clock-change nights, time service down, stale tabs, corrections that
+overlap…), how it's handled, and the test that proves it: **[docs/TESTS.md](docs/TESTS.md)**.
+
 ## Not done, by choice
 - No fallback to the computer's clock; no automatic closing of shifts; no e-mail notifications.
 - Considered and left as is: a time service returning an old but valid time; a rare clock-change-night bug in corrections;
