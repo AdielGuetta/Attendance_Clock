@@ -6,8 +6,9 @@ Guidance for Claude Code when working in this repository.
 This folder (`…\שעון\tamir-playground`) is a **practice copy** of the submitted project. The user calls it **proj2** and
 uses it to add features and learn how frontend, backend and database connect. See [PLAYGROUND.md](PLAYGROUND.md).
 
-- **Never touch the real project** in `…\שעון\tamir` (the submission, pushed to GitHub). Don't read from or write to it,
-  with **one exception**: the user's private notes there, listed under "The user's private notes" below.
+- **Never touch the real project** in `…\שעון\tamir` (the submission, pushed to GitHub), **including the user's private
+  files there**. Don't read from or write to it at all. proj2 is a **complete copy**: since 2026-11-21 it has its own
+  copies of the private files (below), and every change, notes included, happens here.
 - **Ports here:** app **5175**, API **5081**, DB **1434**. Containers `playground-db/-api/-web`. The rest of this file and
   the README still say 5174/5080/1433: in proj2, use the ports above.
 - **No git remote**: never add one, never push. Work on a branch per feature (`feature/…`), commit with the usual style;
@@ -33,11 +34,14 @@ uses it to add features and learn how frontend, backend and database connect. Se
   4. Employees tab (search, on/off-shift filter); greeting + design refresh.
   Skip: profile photos, "online in the last 2 minutes".
 
-### The user's private notes (in the real project folder, never in git)
-- `…\שעון\tamir\ADI-NOTE.md`: after answering **any genuine question** from the user, add it under the right topic with a
+### The user's private files (in THIS folder, never in git)
+They're kept out of git by `.git/info/exclude` (a local-only ignore list, same as in the real project), so they never
+show in `git status` and could never be uploaded. Don't move them into `.gitignore` or commit them.
+- `ADI-NOTE.md` (proj2 root): after answering **any genuine question** from the user, add it under the right topic with a
   1–2 sentence answer. Keep numbers sequential (renumber the following questions and the glossary "More" refs if needed);
   add new key terms to the glossary. Edit it with the Edit tool only (never PowerShell Get-Content/Set-Content).
-- `…\שעון\tamir\INTERVIEW-NOTES.md`: optional entries for notable lessons (What / Why / "Say").
+- `INTERVIEW-NOTES.md` (proj2 root): optional entries for notable lessons (What / Why / "Say").
+- `ADI-SYSTEM-MAP.html` / `.pdf` (proj2 root): the user's system diagram; it still shows the original project only.
 
 ### How to work with this user (same as always)
 The user is new to programming and is preparing for an interview. One step at a time: explain *what* and *why* in a few
