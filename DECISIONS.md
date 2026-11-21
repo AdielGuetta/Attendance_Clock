@@ -66,7 +66,7 @@ requests, manager reports with CSV export, and safety fixes ([plans 12–15](doc
 | 45 | **Clock Out names the shift the screen shows** (`{"shiftId"}` → 409 `SHIFT_CHANGED` if a different one is open) | An old tab still showing a closed shift could otherwise close a newer one by mistake. No body = old behaviour. |
 | 46 | **One change per employee at a time**: Clock In, corrections and approvals lock the employee row (`UPDLOCK` in a transaction) before their overlap / "after the last Clock Out" check | Rules spanning several shifts can't be a constraint on one row. Without the lock, two managers' simultaneous corrections both passed (proved by switching the lock off in the test). Different employees never wait for each other. |
 | 47 | **Reports are computed live with the same rules as My week** (Clock In date, nearest-minute sum); **the CSV is built by the server** (UTF-8 BOM, RFC 4180 quoting, formula guard) and downloaded via `fetch` + blob | A report can never disagree with the screens. The BOM makes Excel read ä/—; the guard stops "CSV injection". A plain link can't carry the login badge, so the screen fetches the file. |
-| 48 | **Scope decisions by the user**: managers may fix their own shifts (EC-16 kept); "check *active* on every request" was built, then cancelled; stale-provider time and the fall-back-night offset not fixed (rare); feature 4 (Employees tab, design refresh) skipped | Recorded so a reviewer sees they were considered, not missed. |
+| 48 | **Scope decisions by the user**: managers may fix their own shifts (EC-16 kept); "check *active* on every request" was built, then cancelled; stale-provider time and the fall-back-night offset not fixed (rare); ports open to the local network considered, left as is; feature 4 (Employees tab, design refresh) skipped | Recorded so a reviewer sees they were considered, not missed. |
 
 ## Edge cases
 
@@ -137,6 +137,10 @@ requests, manager reports with CSV export, and safety fixes ([plans 12–15](doc
   a CSV export and reports.)*
 - **proj2:** an employee can't cancel their own request or ask for a whole missing day; the manager can't change a shift's
   location; no automated UI tests for the new screens either (checked by browser walkthroughs + unit tests for the logic).
+- **Ports are open to the local network:** Docker publishes the app, API and database ports on every network connection,
+  so a device on the same Wi-Fi could reach them (the database password is a local-development one, in
+  `docker-compose.yml`). Limiting them to this computer (`127.0.0.1:` in front of each port) was considered and tested in
+  proj2; left as it is by choice: it's a local practice setup, and nothing is reachable from the internet.
 
 ## Working with Claude Code
 - Rules for the AI live in [CLAUDE.md](CLAUDE.md); each big step starts with a plan in [docs/plans/](docs/plans/).
@@ -159,6 +163,6 @@ requests, manager reports with CSV export, and safety fixes ([plans 12–15](doc
     original must stay completely untouched: the notes moved into proj2 and the real file was restored;
   - I questioned two UI details it had missed: the AM/PM time box (#44) and the focus ring overlapping the clock button;
   - when I asked "can anyone with the link see it?", it checked and found the containers' ports were open on the whole
-    Wi-Fi network (database included); a fix limiting proj2's ports to this computer is ready on its own branch
-    (`fix/local-only-ports`, not merged yet);
+    Wi-Fi network (database included). Limiting them to this computer was considered and tested, and I chose to leave
+    the setup as it is (see the last row of "Known limitations");
   - for the race fix it proved the test is meaningful by switching the lock off: the test failed, as it should (#46).

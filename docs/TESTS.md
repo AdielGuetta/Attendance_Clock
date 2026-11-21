@@ -304,5 +304,5 @@ Legend: ✅ automated test · 🔒 enforced by the database · 🟡 handled by d
 - **proj2 browser walkthroughs** (details in each plan's "Results"): Office / Remote chosen and shown everywhere, phone
   layout (plan 12) · fix requests sent, approved and rejected, badge counts, audit entry, statuses for the employee
   (plan 13) · length / moved-day warnings, 24-hour time box and roller (13c/d) · old tab refused with two tabs (plan 14) ·
-  report totals equal My week, CSV rows add up (plan 15) · Wi-Fi exposure before / after limiting the ports (that fix is
-  on its own branch, `fix/local-only-ports`).
+  report totals equal My week, CSV rows add up (plan 15) · Wi-Fi exposure: the ports answered through the computer's
+  Wi-Fi address, and limiting them to this computer closed them (tried, then left as is by choice; DECISIONS, limitations).

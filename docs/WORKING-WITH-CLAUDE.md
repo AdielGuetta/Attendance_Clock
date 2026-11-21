@@ -54,7 +54,7 @@ PRD (what & why) → plan file for the step → I review/ask questions → appro
 | **proj2** · Claude kept writing my private notes into the **real** project folder, because its hand-over said so | I clarified: the original stays completely untouched | Notes copied into proj2 (kept out of git), the real file restored, CLAUDE.md changed |
 | **proj2** · The date-time box showed "05:00 PM" while the app shows "17:00", and later the focus ring overlapped the clock button | I noticed both | 24-hour time box with a roller (DECISIONS #44); box and button made one unit |
 | **proj2** · A fix request could move a shift to another day without the manager noticing | My question | New length, moved day and "Over 14 h" shown to both sides (DECISIONS #43) |
-| **proj2** · I asked "can anyone with the link see it?" | Claude checked the Docker ports | They were open to the whole Wi-Fi (database included); a fix limiting them to this computer is on its own branch |
+| **proj2** · I asked "can anyone with the link see it?" | Claude checked the Docker ports | They were open to the whole Wi-Fi (database included). Limiting them to this computer was tried and worked; I chose to leave the setup as it is (a local practice copy) |
 | **proj2** · "Check *active* on every request" was built as planned, then I cancelled it | My decision after seeing it | Undone as its own commit, so the history shows both |
 | **proj2** · Is the new race test meaningful, or would it pass anyway? | Claude switched the lock off and ran it | It failed (both corrections went through), so it really detects the race (DECISIONS #46) |
 
