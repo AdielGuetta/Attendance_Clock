@@ -10,7 +10,7 @@ namespace AttendanceClock.Api.Reports;
 /// Manager reports and the CSV export (Plan 15). Computed live from the existing tables: nothing is stored, so a report
 /// is never out of date. Uses the SAME rules as My week and the Team tab, so every number matches:
 /// a shift counts on the Zurich date of its Clock In (D-10), and hours are the sum of each closed shift's
-/// nearest-minute length (DECISIONS #21). Open shifts are counted separately, never guessed.
+/// nearest-minute length (DECISIONS #7). Open shifts are counted separately, never guessed.
 /// </summary>
 public sealed class ReportService(AppDbContext db)
 {

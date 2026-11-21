@@ -15,7 +15,7 @@
 - **What happened:** Windows **Smart App Control** on the dev machine blocked every locally built .NET assembly
   (`0x800711C7`), even through the signed `dotnet` host and outside OneDrive. Turning it off would require reinstalling Windows.
 - **Options weighed:** turn it off (rejected: irreversible) · WSL/Ubuntu (works, more setup) · **Docker** (already
-  installed, no system changes) → **chosen** (PRD D-12, DECISIONS #9).
+  installed, no system changes) → **chosen** (PRD D-12, DECISIONS #2).
 - **Result:** `docker-compose.yml` with SQL Server 2022 + the API (`dotnet watch`); `/health` → `Healthy`.
 - **Correction:** the PRD still said "no Docker" after the switch. Caught by the user and fixed in a separate commit.
 

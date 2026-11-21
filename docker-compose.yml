@@ -62,7 +62,7 @@ services:
     container_name: attendance-clock-web
     working_dir: /app
     # Fail fast: the config file is named explicitly (missing → error, not silent defaults), and the vital settings
-    # are repeated as flags, so even a restart can't come up on the wrong port. See DECISIONS.md (merge incident).
+    # are repeated as flags, so even a restart can't come up on the wrong port. See docs/WORKING-WITH-CLAUDE.md (merge incident).
     command: ["sh", "-c", "npm install --no-audit --no-fund && npm run dev -- --config vite.config.ts --host 0.0.0.0 --port 5174 --strictPort"]
     restart: unless-stopped   # if it stops with an error, Docker starts it again
     healthcheck:

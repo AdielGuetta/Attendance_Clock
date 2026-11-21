@@ -1,4 +1,4 @@
-// Keeps the login badge (JWT) between page refreshes. Trade-off (DECISIONS.md): localStorage is readable by
+// Keeps the login badge (JWT) between page refreshes. Trade-off (docs/plans/09-react-ui.md): localStorage is readable by
 // scripts on the page, so an XSS hole could steal it. We never render raw HTML (React escapes everything),
 // and the badge expires after 60 minutes anyway.
 

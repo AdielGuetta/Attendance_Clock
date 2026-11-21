@@ -27,7 +27,7 @@ public sealed record ShiftDto(
         s.ClockOutSource,
         // Subtracting DateTimeOffsets compares the real instants, so DST nights come out right (PRD D-6).
         // Rounded to the NEAREST minute (30 s rounds up): fair in both directions, and history totals are
-        // the sum of these values, so what the employee sees always adds up (Plan 08, DECISIONS #21).
+        // the sum of these values, so what the employee sees always adds up (Plan 08, DECISIONS #7).
         s.ClockOut is { } clockOut ? (int)Math.Round((clockOut - s.ClockIn).TotalMinutes, MidpointRounding.AwayFromZero) : null,
         Enum.GetValues<ShiftFlags>().Where(f => f != ShiftFlags.None && s.Flags.HasFlag(f)).Select(f => f.ToString()).ToList(),
         s.WorkLocation?.ToString());

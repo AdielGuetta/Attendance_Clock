@@ -108,7 +108,7 @@ docker exec attendance-clock-web sh -c "npx tsc -b && npx vitest run"       # fr
 With the [.NET 10 SDK](https://dotnet.microsoft.com/download) and any reachable SQL Server: set the connection string in
 `backend/AttendanceClock.Api/appsettings.Development.json`, then run `dotnet run --project backend/AttendanceClock.Api`.
 *(On the original dev machine this wasn't possible: Windows Smart App Control blocks locally built programs. That's why
-Docker is the main path. See [DECISIONS.md](DECISIONS.md), #9.)*
+Docker is the main path. See [DECISIONS.md](DECISIONS.md), #2.)*
 
 ## How the Docker setup works
 
@@ -185,7 +185,7 @@ Your computer (Windows / macOS / Linux)
 
 ## Documentation
 - [docs/PRD.md](docs/PRD.md): requirements, edge cases and design (phase 2 changes are marked "Plan 12–15 (phase 2)")
-- [DECISIONS.md](DECISIONS.md): key decisions, edge cases, what was left out, known limitations
+- [DECISIONS.md](DECISIONS.md): the main decisions in short (product, rules, key technical), what was left out, limitations
 - [docs/TECH-STACK.md](docs/TECH-STACK.md): pros and cons of each component, and how each affects the user experience.
   **Visual version:** [docs/TECH-STACK.pdf](docs/TECH-STACK.pdf) (diagrams: architecture, Clock In flow, waiting time, concurrency, Docker)
 - [docs/TESTS.md](docs/TESTS.md): every edge case (מקרי קצה), how it's handled, and which automated test proves it

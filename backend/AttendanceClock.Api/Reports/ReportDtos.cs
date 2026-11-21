@@ -10,7 +10,7 @@ public sealed record ReportDto(
     IReadOnlyList<EmployeeReportDto> Employees,
     IReadOnlyList<DayReportDto> Days);
 
-/// <param name="TotalMinutes">Sum of each closed shift's nearest-minute length (DECISIONS #21), like My week.</param>
+/// <param name="TotalMinutes">Sum of each closed shift's nearest-minute length (DECISIONS #7), like My week.</param>
 /// <param name="Shifts">Closed shifts.</param>
 /// <param name="EmployeesWorked">Employees with at least one shift (closed or still open) in the range.</param>
 /// <param name="UnknownLocationMinutes">Shifts from before work location existed (Plan 12).</param>

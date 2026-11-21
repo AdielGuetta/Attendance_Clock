@@ -73,6 +73,6 @@ Creating and deactivating employees from the UI (deactivation while on shift, EC
   Fixed with `docker compose restart web`, and CLAUDE.md now says to fast-forward `main` without switching first.
 - Also fixed in passing: PRD EC-15 still mentioned the dropped idempotency key.
 - **Follow-up (suggested by the user): fail fast.** The web container now starts Vite with `--config vite.config.ts`
-  plus explicit host/port flags, `restart: unless-stopped`, and a health check (DECISIONS #35). Re-created the incident
+  plus explicit host/port flags, `restart: unless-stopped`, and a health check. Re-created the incident
   on purpose (config file removed for 3 s): Vite logged "failed to load config … server restart failed", kept serving
   with its last good settings, restarted correctly when the file returned; the app answered 200 throughout, health "healthy".

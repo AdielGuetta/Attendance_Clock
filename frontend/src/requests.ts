@@ -25,7 +25,7 @@ export type ChangeSummary = {
  * very long result (e.g. 16 Nov typed instead of 17 Nov → a 33-hour shift). Warns, never blocks: the manager decides.
  */
 export function summarizeChange(recordedIn: Moment, recordedOut: Moment, recordedMinutes: number, newIn: Moment, newOut: Moment): ChangeSummary {
-  // Rounded to the nearest minute, like the server's durations (DECISIONS #21).
+  // Rounded to the nearest minute, like the server's durations (DECISIONS #7).
   const minutes = Math.round((newOut.ms - newIn.ms) / 60000);
   return {
     minutes,

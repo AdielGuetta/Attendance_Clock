@@ -22,7 +22,7 @@ many rows, a new endpoint, and a **file download**.
 ## Rules (same as the rest of the app, so every number matches My week and the Team tab)
 - A shift counts on the **Zurich date of its Clock In** (D-10); day boundaries from Zurich's rules (DST days are 23/25 h).
 - **Closed shifts only** in the hours; each shift rounded to the nearest minute and totals are the **sum of those**
-  (DECISIONS #21). Shifts still open are counted separately ("still open"), never guessed.
+  (DECISIONS #7). Shifts still open are counted separately ("still open"), never guessed.
 - Over 14 h = strictly more than 14 h (same as the `TooLong` flag).
 
 ## Layer by layer

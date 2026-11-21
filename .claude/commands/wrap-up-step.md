@@ -9,8 +9,8 @@ We finish every step the same way. Go through this checklist for the step just b
 2. **Plan file** (`docs/plans/NN-*.md`): status → done ✅; fill in "Results" with what was built, test counts, the live check,
    and anything that went wrong or was corrected.
 3. **PRD:** if the implementation differs from the PRD, mark the change in place ("Revised in Plan NN: …") with the reason.
-4. **DECISIONS.md:** new key decisions (numbered), edge cases with status, limitations, and **where Claude needed
-   correcting** (be honest: this is what reviewers look for).
+4. **DECISIONS.md:** only important decisions, one short line each (edge cases go to docs/TESTS.md). **Where Claude needed
+   correcting** goes to docs/WORKING-WITH-CLAUDE.md (be honest: this is what reviewers look for).
 5. **docs/TESTS.md:** new edge cases → test mapping, the test list, the totals.
 6. **README.md:** the project status table, any new URLs/commands. **CLAUDE.md:** the code map, new gotchas.
 7. Check for garbled characters (`Ã`, `Â·`, `â€`) in the files you edited.

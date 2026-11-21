@@ -137,7 +137,9 @@ docs/TECH-STACK.md                   # pros/cons + user impact per component (up
 docs/TECH-STACK.pdf                  # visual version, generated from docs/visual/tech-stack.html with headless Edge:
                                      #   msedge --headless=new --no-pdf-header-footer --print-to-pdf=<pdf> <file-uri of html>
 docs/TESTS.md                        # edge case → handling → test mapping + list of all tests (update when tests change)
-DECISIONS.md                         # reviewer-facing summary of decisions, edge cases, limitations (keep brief, update each step)
+DECISIONS.md                         # the main decisions, one line each (product, rules, key technical); keep it SHORT.
+                                     #   Edge cases go to docs/TESTS.md, Claude corrections to WORKING-WITH-CLAUDE.
+                                     #   The older full version is DECISIONS-FULL.md (private, not in git).
 README.md                            # how to run + project status (update the status table each step)
 docs/plans/                          # implementation plans, one per step (01–03 retrospective)
 docs/WORKING-WITH-CLAUDE.md          # process + where Claude helped / was corrected (keep in sync with DECISIONS)
@@ -159,7 +161,7 @@ docker-compose.yml
   `git merge-base --is-ancestor main HEAD`). Don't `git switch main` *before* merging: that briefly deletes files that
   only exist on the branch, and the running watchers (Vite, dotnet watch) restart without them. This happened once:
   Vite came back on its default port 5173 with no config, and `docker compose restart web` was needed.
-  Since then the web container is fail-fast (`--config` + port flags, `restart: unless-stopped`, health check; DECISIONS #35),
+  Since then the web container is fail-fast (`--config` + port flags, `restart: unless-stopped`, health check),
   so a missing config logs an error and keeps the last good server. Don't remove those flags.
 - Running `dotnet ef` / `dotnet add package` stops the `api` container for a minute (stop/run/start pattern above), so the
   app is unreachable meanwhile; tell the user. (Tests no longer need this: use the `tests` container.)

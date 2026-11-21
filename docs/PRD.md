@@ -58,7 +58,7 @@ Self-registration: **no**. Employees are created by a manager (or seeded). *(D-1
   approval runs the F6 correction (labelled, audited); reject without a note.*
 - ~~**N4** Hebrew / RTL UI.~~ Decided: the UI is in English.
 
-### Out of scope (stated in DECISIONS.md as "chose not to do")
+### Out of scope (stated in DECISIONS.md under "Not done, by choice")
 Breaks within a shift · payroll / overtime rules · geofencing / IP restriction · multiple sites or time zones · SSO / external identity providers · offline punching · mobile app · notifications.
 
 ---

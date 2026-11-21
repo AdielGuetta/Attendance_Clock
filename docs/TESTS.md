@@ -139,7 +139,7 @@ Legend: ✅ automated test · 🔒 enforced by the database · 🟡 handled by d
 | ID | Edge case | Handling | Proof |
 |---|---|---|---|
 | D-10 | **Overnight shift** in a report | Counted on its start date | ✅ Reports #1 |
-| #21 | **Seconds** that don't fill a minute | Sum of each shift's nearest-minute length (matches My week) | ✅ Reports #1 |
+| #7 | **Seconds** that don't fill a minute | Sum of each shift's nearest-minute length (matches My week) | ✅ Reports #1 |
 | EC-6 | **DST day** (23 h) at the range edge | Zurich midnight from the official rules | ✅ Reports #2 |
 | — | **Open shifts**, unknown location, long and corrected shifts | Open: counted, not in hours; each tile counted | ✅ Reports #3 |
 | — | **Employee filter**, waiting requests | Only that employee; requests for shifts in the range | ✅ Reports #4, #5 |
@@ -305,4 +305,4 @@ Legend: ✅ automated test · 🔒 enforced by the database · 🟡 handled by d
   layout (plan 12) · fix requests sent, approved and rejected, badge counts, audit entry, statuses for the employee
   (plan 13) · length / moved-day warnings, 24-hour time box and roller (13c/d) · old tab refused with two tabs (plan 14) ·
   report totals equal My week, CSV rows add up (plan 15) · Wi-Fi exposure: the ports answered through the computer's
-  Wi-Fi address, and limiting them to this computer closed them (tried, then left as is by choice; DECISIONS, limitations).
+  Wi-Fi address, and limiting them to this computer closed them (tried, then left as is by choice; DECISIONS, "Not done, by choice").
