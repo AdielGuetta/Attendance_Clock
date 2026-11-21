@@ -46,7 +46,7 @@ never be uploaded. Don't move them into `.gitignore` or commit them.
   1–2 sentence answer. Keep numbers sequential (renumber the following questions and the glossary "More" refs if needed);
   add new key terms to the glossary. Edit it with the Edit tool only (never PowerShell Get-Content/Set-Content).
 - `INTERVIEW-NOTES.md` (root): optional entries for notable lessons (What / Why / "Say").
-- `ADI-SYSTEM-MAP.html` / `.pdf` / `.svg` (root): the user's system diagram (phase 2 parts marked NEW); the `.svg` is
+- `ADI-SYSTEM-MAP.html` / `.pdf` / `.svg` (root): the user's system diagram (one uniform style: no "NEW" marks, by the user's choice); the `.svg` is
   page 1, shown at the top of ADI-NOTE. Re-print the PDF with headless Edge when the HTML changes.
 
 ### How to work with this user (same as always)
