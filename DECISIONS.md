@@ -17,7 +17,7 @@ each step in [docs/plans/](docs/plans/).
 |---|---|---|
 | 5 | Punch times come only from the external time service, fetched by the server | The core rule: a device clock can be changed by anyone |
 | 6 | Time service down → the punch is refused | A wrong time is worse than a missing punch |
-| 7 | A shift counts on the Zurich day it started; each shift rounds to the nearest minute; totals = sum of rows | Overnight shifts counted once; fair pay, and the numbers always add up |
+| 7 | A shift counts on the Zurich day it started, once; its length is the real time worked, even on clock-change nights (22:00 → 06:00 = 7 h in March, 9 h in October); totals = the sum of each shift's length, rounded to the nearest minute | Fair pay for the time actually worked. Times are stored with their Zurich offset, so lengths are never guessed; the CET/CEST labels explain the "missing" hour, and the numbers always add up |
 | 8 | Long or forgotten shifts are flagged, never blocked or closed automatically | Never invent a time |
 | 9 | Manager corrections need a reason and leave a permanent audit trail; managers may fix their own shifts | The only non-API times, so each is explained; with one manager, nobody else could fix theirs |
 | 10 | Employee requests (finished shifts only) are suggestions; approving = an audited manager correction; reject needs no note | One set of rules and one audit trail |
