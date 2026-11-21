@@ -54,7 +54,7 @@ Self-registration: **no**. Employees are created by a manager (or seeded). *(D-1
 ### Nice to have (only if MVP is solid)
 - **N1** CSV export of shifts for a date range (payroll hand-off).
 - **N2** Employee "undo" of an accidental punch within 2 minutes.
-- **N3** Employee can request a correction (manager approves). *Built in Plan 13 (proj2): finished shifts only;
+- **N3** Employee can request a correction (manager approves). *Built in Plan 13 (phase 2): finished shifts only;
   approval runs the F6 correction (labelled, audited); reject without a note.*
 - ~~**N4** Hebrew / RTL UI.~~ Decided: the UI is in English.
 
@@ -120,7 +120,7 @@ The UI shows a ticking Zurich clock for convenience. It's seeded from `GET /api/
 
 ### F2 Clock In / Clock Out
 - `POST /api/punches/clock-in`, `POST /api/punches/clock-out`. No body.
-  *Revised in Plan 12 (proj2): Clock In now takes `{ "location": "Office" | "Remote" }` (required, else 400
+  *Revised in Plan 12 (phase 2): Clock In now takes `{ "location": "Office" | "Remote" }` (required, else 400
   `INVALID_LOCATION`). Still no time in the body: any time a client adds is ignored (D-2). Clock Out has no body.*
   *(Revised in Plan 07: the optional `Idempotency-Key` header was dropped. The DB unique index already guarantees correctness,
   and a repeated punch gets a `409` that includes the current state, so the UI can refresh. ✅ Implemented in [Plan 07](plans/07-clock-in-out.md).)*
@@ -173,7 +173,7 @@ Flags never block the employee; they surface in the manager's view.
 |---|---|---|
 | **EC-1** | Double-click on Clock In | UI disables the button while in flight; DB unique index is the final guard → 409 `ALREADY_ON_SHIFT` with the open shift. ✅ Tested with 10 simultaneous requests. |
 | **EC-2** | Two tabs / devices punch at the same time | DB filtered unique index + optimistic concurrency (`rowversion`) on the shift. One wins, the other gets 409 and the UI refetches status. |
-| **EC-3** | Clock Out with no open shift (stale tab) | 409 with a "you're not on shift" message; UI refetches status. *Plan 14 (proj2): a stale tab showing an already-closed shift while a NEWER one is open → Clock Out sends the shown shift's id → 409 `SHIFT_CHANGED`, the newer shift is untouched.* |
+| **EC-3** | Clock Out with no open shift (stale tab) | 409 with a "you're not on shift" message; UI refetches status. *Plan 14 (phase 2): a stale tab showing an already-closed shift while a NEWER one is open → Clock Out sends the shown shift's id → 409 `SHIFT_CHANGED`, the newer shift is untouched.* |
 | **EC-4** | Forgot to clock out yesterday, tries to Clock In today | Clock in is blocked (there's still an open shift). UI explains: "You have an open shift since Mon 08:02. Clock out now (it will be flagged for your manager) or ask your manager to correct it." |
 | **EC-5** | Overnight shift (22:00 → 06:00) | Fully supported; duration from UTC. Attributed to the clock-in date. |
 | **EC-6** | DST start (last Sun of March, 02:00 → 03:00) during a night shift | Wall clock shows 8 h, real duration 7 h. UTC math gives 7 h, which is correct. The UI shows both times with the CET/CEST label so it isn't confusing. Covered by a unit test. |
@@ -183,7 +183,7 @@ Flags never block the employee; they surface in the manager's view.
 | **EC-10** | Employee's browser is in a different time zone, or their PC clock is wrong | Irrelevant to recording (server-side time). Display is always Zurich, labelled. |
 | **EC-11** | Very short accidental shift (seconds) | Recorded honestly. (N2 "undo within 2 min" if time allows.) |
 | **EC-12** | Employee deactivated while on shift | Deactivation is blocked until the open shift is closed, or the manager closes it as part of deactivating (audited). |
-| **EC-13** | Manager correction creates an overlap or a future time | Rejected by validation. ✅ Tested (Plan 10). *Plan 14 (proj2): also when two changes for the same employee run at the same moment: a per-employee lock (UPDLOCK on the employee row) makes the second wait and re-check.* |
+| **EC-13** | Manager correction creates an overlap or a future time | Rejected by validation. ✅ Tested (Plan 10). *Plan 14 (phase 2): also when two changes for the same employee run at the same moment: a per-employee lock (UPDLOCK on the employee row) makes the second wait and re-check.* |
 | **EC-14** | Expired JWT mid-session | 401 → UI redirects to login, keeps nothing stale. |
 | **EC-15** | Punch request arrives, API call succeeds, DB write fails | Transaction; nothing is saved; the user gets an error and retries. The retry is safe: a repeated punch gets a `409` with the current state (the idempotency key was dropped in Plan 07). |
 | **EC-16** | A manager edits their own shift | Allowed but audited (and flagged `Corrected`). Noted as a known limitation: no four-eyes rule. |

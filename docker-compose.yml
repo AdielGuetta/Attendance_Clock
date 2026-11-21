@@ -10,7 +10,7 @@ services:
     # SQL Server images exist only for Intel/AMD (x86-64). On Apple Silicon Macs, Docker Desktop runs this
     # under emulation (Rosetta). Stating the platform makes that explicit and avoids "no matching manifest" errors.
     platform: linux/amd64
-    container_name: playground-db
+    container_name: attendance-clock-db
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_PID: "Developer"
@@ -31,7 +31,7 @@ services:
   # 2) Server: our ASP.NET Core API, run with "dotnet watch" so code changes reload automatically.
   api:
     image: mcr.microsoft.com/dotnet/sdk:10.0
-    container_name: playground-api
+    container_name: attendance-clock-api
     restart: unless-stopped   # if it crashes, Docker starts it again
     working_dir: /src
     command: ["dotnet", "watch", "run", "--project", "AttendanceClock.Api", "--", "--urls", "http://0.0.0.0:5080"]
@@ -54,12 +54,12 @@ services:
       db:
         condition: service_healthy
 
-  # 3) Screens: the React app (Vite dev server). Open http://localhost:5175 (PLAYGROUND copy)
+  # 3) Screens: the React app (Vite dev server). Open http://localhost:5175
   #    (not Vite's usual 5173, which other local projects often occupy)
   #    It forwards /api/* calls to the "api" container, so the browser talks to one address only.
   web:
     image: node:24-alpine
-    container_name: playground-web
+    container_name: attendance-clock-web
     working_dir: /app
     # Fail fast: the config file is named explicitly (missing → error, not silent defaults), and the vital settings
     # are repeated as flags, so even a restart can't come up on the wrong port. See DECISIONS.md (merge incident).

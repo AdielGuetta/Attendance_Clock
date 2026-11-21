@@ -3,12 +3,12 @@
 The assignment asks us to **identify edge cases and complex scenarios and handle them**. This document maps each edge case
 (IDs from [PRD §6](PRD.md)) to **how it's handled** and **which automated test proves it**.
 
-**Current result (proj2): 95 / 95 backend test cases + 35 / 35 frontend tests passing.** *(Submitted version: 58 + 13.
-proj2 added 37 backend and 22 frontend tests; they're marked **proj2** below.)*
+**Current result (phase 2): 95 / 95 backend test cases + 35 / 35 frontend tests passing.** *(After phase 1, the core: 58 + 13.
+Phase 2 added 37 backend and 22 frontend tests; they're marked **Phase 2** below.)*
 
 ```bash
 docker compose run --rm tests                                          # backend (own build folders; the app keeps running)
-docker exec playground-web sh -c "npx tsc -b && npx vitest run"        # frontend (+ type-check)
+docker exec attendance-clock-web sh -c "npx tsc -b && npx vitest run"        # frontend (+ type-check)
 ```
 
 ---
@@ -22,10 +22,10 @@ docker exec playground-web sh -c "npx tsc -b && npx vitest run"        # fronten
 | **Punch integration tests** (15 methods, 19 cases) | `Tests/Punches/PunchTests.cs` | Real app + test DB, with the time APIs swapped for a **fake clock** we control ("it's now 22:00", "the service is down") | Lets us "travel" to a DST night or a 15-hour shift; the fake exists **only in tests** |
 | **History integration tests** (11 methods, 13 cases) | `Tests/History/HistoryTests.cs` | Real app + test DB + fake clock; shifts on many days inserted directly | Day boundaries, DST days, totals, privacy |
 | **Manager integration tests** (14 methods, 16 cases) | `Tests/Admin/AdminTests.cs` | Real app + test DB + fake clock, logged in as a manager | Permissions, corrections, audit trail, version stamps, DST input |
-| **proj2** · **Correction request tests** (13 methods, 18 cases) | `Tests/Requests/CorrectionRequestTests.cs` | Real app + test DB + fake clock, as employee and manager | Ask, approve (= audited correction), reject, races, permissions |
-| **proj2** · **Safety fix tests** (3) | `Tests/Safety/SafetyFixTests.cs` | Real app + test DB + fake clock; parallel requests | Old tab, the per-employee lock (15 rounds of simultaneous corrections) |
-| **proj2** · **Report tests** (7) | `Tests/Reports/ReportTests.cs` | Real app + test DB; each test uses its own month so totals don't mix | Totals, DST-day edges, CSV safety |
-| **Frontend unit tests** (35) | `frontend/src/*.test.ts` (Vitest) | Pure functions, no browser needed | Zurich display, 14-h alert, *(proj2:)* recent shifts, location, request warnings, 24-h time entry, report periods |
+| **Phase 2** · **Correction request tests** (13 methods, 18 cases) | `Tests/Requests/CorrectionRequestTests.cs` | Real app + test DB + fake clock, as employee and manager | Ask, approve (= audited correction), reject, races, permissions |
+| **Phase 2** · **Safety fix tests** (3) | `Tests/Safety/SafetyFixTests.cs` | Real app + test DB + fake clock; parallel requests | Old tab, the per-employee lock (15 rounds of simultaneous corrections) |
+| **Phase 2** · **Report tests** (7) | `Tests/Reports/ReportTests.cs` | Real app + test DB; each test uses its own month so totals don't mix | Totals, DST-day edges, CSV safety |
+| **Frontend unit tests** (35) | `frontend/src/*.test.ts` (Vitest) | Pure functions, no browser needed | Zurich display, 14-h alert, *(phase 2:)* recent shifts, location, request warnings, 24-h time entry, report periods |
 
 The database test classes share the test database, so they never run in parallel (`DatabaseCollection`).
 
@@ -98,10 +98,10 @@ Legend: ✅ automated test · 🔒 enforced by the database · 🟡 handled by d
 | EC-2 (edit) | **Shift changed while the manager was editing** | Version stamp → `409 SHIFT_MODIFIED` | ✅ Admin #10 · 🔒 rowversion |
 | EC-7 | Manager types **02:30 on the fall-back night** (happens twice) | `400 AMBIGUOUS_TIME`; with an explicit offset it's accepted, and the duration is correct | ✅ Admin #11 |
 | EC-6 | Manager types **02:30 on the spring-forward night** (doesn't exist) | `400 INVALID_LOCAL_TIME` | ✅ Admin #11b |
-| EC-16 | Manager corrects **their own** shift | Allowed, audited and flagged like any other | ⚠️ no four-eyes rule (kept by the user's decision in proj2) |
+| EC-16 | Manager corrects **their own** shift | Allowed, audited and flagged like any other | ⚠️ no four-eyes rule (kept by the user's decision) |
 | EC-12 | Employee **deactivated while on shift** | No employee-management screen yet | ⏳ not built |
 
-### proj2 · Work location
+### Phase 2 · Work location
 | ID | Edge case | Handling | Proof |
 |---|---|---|---|
 | — | Location **missing**, empty, unknown (`"Moon"`) or a number (`"1"`) | `400 INVALID_LOCATION`, checked **before** the time API (the test runs with the time service "down" and still gets 400) | ✅ Punch #14 (5 cases) |
@@ -110,7 +110,7 @@ Legend: ✅ automated test · 🔒 enforced by the database · 🟡 handled by d
 | — | **Old shifts** without a location | `NULL` → "—"; a correction never changes the location | ✅ History #10 · Admin #13 · 🔒 check constraint |
 | — | Shared computer: the next person gets the previous person's choice | Remembered **per user** | ✅ frontend location #2 |
 
-### proj2 · Correction requests
+### Phase 2 · Correction requests
 | ID | Edge case | Handling | Proof |
 |---|---|---|---|
 | — | Request for **someone else's** shift | `404` (ids don't reveal other people's data) | ✅ Requests #2 |
@@ -126,7 +126,7 @@ Legend: ✅ automated test · 🔒 enforced by the database · 🟡 handled by d
 | EC-6 | Typed time on the night the **clocks change** (length shown) | Zurich offset of that very moment | ✅ frontend requests #5 |
 | EC-7 | Fall-back night: one "first / second 02:30" answer applied to **both** corrected times; requests can't choose | Known bug | ⚠️ not fixed (user's decision) |
 
-### proj2 · Safety fixes
+### Phase 2 · Safety fixes
 | ID | Edge case | Handling | Proof |
 |---|---|---|---|
 | EC-3 | **Old tab** clocks out a *newer* shift | Clock Out names the shown shift → `409 SHIFT_CHANGED`, newer shift untouched | ✅ Safety #1, #2 · browser (two tabs) |
@@ -135,7 +135,7 @@ Legend: ✅ automated test · 🔒 enforced by the database · 🟡 handled by d
 | — | Provider returns an **old time** that still passes validation | Not detected | ⚠️ not fixed (user's decision) |
 | EC-14 | **Deactivated** employee with a still-valid badge | Clock In / Out refuse it; other actions until the badge expires | ⚠️ fix built, then cancelled (user's decision) |
 
-### proj2 · Reports and CSV
+### Phase 2 · Reports and CSV
 | ID | Edge case | Handling | Proof |
 |---|---|---|---|
 | D-10 | **Overnight shift** in a report | Counted on its start date | ✅ Reports #1 |
@@ -193,9 +193,9 @@ Legend: ✅ automated test · 🔒 enforced by the database · 🟡 handled by d
 | 10 | 15-hour shift → recorded and flagged `TooLong` | F7 |
 | 11 | Clock Out time before Clock In → rejected, shift stays open | EC-9 |
 | 12 | Status while on shift shows since when | F3 |
-| 13 | **proj2** · Work location is saved with the shift and kept after Clock Out (any letter case) | Plan 12 |
-| 14 | **proj2** · Missing or unknown location is refused before calling the time API (5 cases: no body, `{}`, `""`, `"Moon"`, `"1"`) | `400 INVALID_LOCATION`, nothing saved |
-| 15 | **proj2** · A time sent by the client is ignored | D-2 |
+| 13 | **Phase 2** · Work location is saved with the shift and kept after Clock Out (any letter case) | Plan 12 |
+| 14 | **Phase 2** · Missing or unknown location is refused before calling the time API (5 cases: no body, `{}`, `""`, `"Moon"`, `"1"`) | `400 INVALID_LOCATION`, nothing saved |
+| 15 | **Phase 2** · A time sent by the client is ignored | D-2 |
 
 ### History: `HistoryTests` (11 methods, 13 cases)
 | # | Test | Proves |
@@ -210,7 +210,7 @@ Legend: ✅ automated test · 🔒 enforced by the database · 🟡 handled by d
 | 7 | No dates → this week, from the trusted clock | Mon–Sun in Zurich |
 | 8 | Invalid range refused (3 cases: reversed, > 93 days, one date only) | `400 INVALID_RANGE` |
 | 9 | History requires login | 401 |
-| 10 | **proj2** · My week shows each shift's work location (Office, Remote, "—" for old shifts) | Plan 12 |
+| 10 | **Phase 2** · My week shows each shift's work location (Office, Remote, "—" for old shifts) | Plan 12 |
 
 ---
 
@@ -230,9 +230,9 @@ Legend: ✅ automated test · 🔒 enforced by the database · 🟡 handled by d
 | 11 | Ambiguous fall-back 02:30 needs an offset; with +01:00 → 330 min | EC-7 |
 | 11b | Non-existent spring-forward 02:30 is refused | EC-6 |
 | 12 | Audit history lists every change in order | D-11 |
-| 13 | **proj2** · Manager sees each shift's location and none for old shifts; a correction keeps the location | Plan 12 |
+| 13 | **Phase 2** · Manager sees each shift's location and none for old shifts; a correction keeps the location | Plan 12 |
 
-### proj2 · Correction requests: `CorrectionRequestTests` (13 methods, 18 cases)
+### Phase 2 · Correction requests: `CorrectionRequestTests` (13 methods, 18 cases)
 | # | Test | Proves |
 |---|---|---|
 | 1 | Request on my finished shift is pending and changes nothing yet | Only the changed time is stored |
@@ -249,14 +249,14 @@ Legend: ✅ automated test · 🔒 enforced by the database · 🟡 handled by d
 | 12 | A decided request can't be decided again | `REQUEST_ALREADY_DECIDED` |
 | 13 | Manager list filters by status and rejects an unknown status | `INVALID_STATUS` |
 
-### proj2 · Safety fixes: `SafetyFixTests` (3)
+### Phase 2 · Safety fixes: `SafetyFixTests` (3)
 | # | Test | Proves |
 |---|---|---|
 | 1 | Clock Out from an old tab doesn't close the newer shift | `SHIFT_CHANGED` |
 | 2 | Clock Out naming the open shift works | |
 | 3 | Two managers correcting two shifts at once never create an overlap (15 rounds) | Employee lock; fails with the lock off |
 
-### proj2 · Reports: `ReportTests` (7)
+### Phase 2 · Reports: `ReportTests` (7)
 | # | Test | Proves |
 |---|---|---|
 | 1 | Hours are the sum of rounded shifts; an overnight shift counts on its start date | 480 + 181 + 480 = 1141 |
@@ -284,7 +284,7 @@ Legend: ✅ automated test · 🔒 enforced by the database · 🟡 handled by d
 | 12 | Alert fires just after 14 h | Plan 11 |
 | 13 | Open time measured on real instants, across a DST change | Plan 11 |
 
-### proj2 · Frontend: 22 more Vitest tests
+### Phase 2 · Frontend: 22 more Vitest tests
 | File | Tests | What they prove |
 |---|---|---|
 | `recent.test.ts` | 4 | Last 14 days across a month boundary · newest first, at most 5 · a shift in progress on top · empty list |
@@ -301,7 +301,7 @@ Legend: ✅ automated test · 🔒 enforced by the database · 🟡 handled by d
   device clocked out** (409 → message + self-refresh), My week, phone-size layout, log out.
 - **Browser walkthrough of the manager screens (plan 10):** forgotten shift flagged → closed with a reason → history entry →
   future time refused → the employee sees "Corrected by manager" and has no Team tab.
-- **proj2 browser walkthroughs** (details in each plan's "Results"): Office / Remote chosen and shown everywhere, phone
+- **Phase 2 browser walkthroughs** (details in each plan's "Results"): Office / Remote chosen and shown everywhere, phone
   layout (plan 12) · fix requests sent, approved and rejected, badge counts, audit entry, statuses for the employee
   (plan 13) · length / moved-day warnings, 24-hour time box and roller (13c/d) · old tab refused with two tabs (plan 14) ·
   report totals equal My week, CSV rows add up (plan 15) · Wi-Fi exposure: the ports answered through the computer's

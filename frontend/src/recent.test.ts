@@ -11,7 +11,7 @@ const shift = (id: number, clockIn: string, clockOut: string | null = "2026-11-2
 const history = (shifts: Shift[], openShift: Shift | null = null): History =>
   ({ from: "2026-11-07", to: "2026-11-20", totalMinutes: 0, days: [], shifts, openShift });
 
-describe("recent shifts (proj2 warm-up)", () => {
+describe("recent shifts (phase 2 warm-up)", () => {
   it("asks for the last 14 days ending today, across a month boundary", () => {
     expect(recentRange("2026-12-03")).toEqual({ from: "2026-11-20", to: "2026-12-03" });
   });

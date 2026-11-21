@@ -6,7 +6,7 @@ The main decisions, the edge cases, what was left out, and known limitations. Ke
 *Status at submission: everything in the "Key decisions" table is built and tested. What wasn't built is listed under
 "What I chose not to do" and "Known limitations". The story of how Claude Code was used is in [docs/WORKING-WITH-CLAUDE.md](docs/WORKING-WITH-CLAUDE.md).*
 
-*proj2 (the practice copy) adds decisions #37–#48 and the edge cases marked **proj2**: work location, employee correction
+*Phase 2 (the extensions, built after the core) adds decisions #37–#48 and the edge cases marked **Phase 2**: work location, employee correction
 requests, manager reports with CSV export, and safety fixes ([plans 12–15](docs/plans/)).*
 
 ---
@@ -52,7 +52,7 @@ requests, manager reports with CSV export, and safety fixes ([plans 12–15](doc
 | 35 | **Fail fast instead of silent defaults** for the dev containers: Vite gets `--config vite.config.ts` plus the port/host flags; `restart: unless-stopped`; a health check on the web container | After the merge incident (Vite silently came back with default settings), suggested by the user: a missing config should be an **error**, not a guess. Verified by re-creating the incident: Vite logged "failed to load config", kept its last good settings, and recovered when the file returned. No outage. |
 | 36 | **Forgotten shifts (> 14 h) are alerted, never auto-closed**: a banner for the employee, a red count on the manager's Team tab | Auto-closing would invent a Clock Out time (not from the API, not from a person, likely wrong pay). Alerts make it hard to miss; the manager fixes it with the real time and a reason. E-mail/push not built (needs extra services). |
 
-### proj2 decisions
+### Phase 2 decisions
 | # | Decision | Why |
 |---|---|---|
 | 37 | **Work location is required at Clock In**: `{"location":"Office"\|"Remote"}`, checked first (400 `INVALID_LOCATION`); stored as text with a check constraint; old shifts stay `NULL` ("—") | A silent default would record wrong data without anyone noticing; inventing "Office" for old shifts would be false. Checked before the time call, so a bad request costs nothing. A time sent in the body is ignored (D-2 still holds). |
@@ -97,21 +97,21 @@ requests, manager reports with CSV export, and safety fixes ([plans 12–15](doc
 | Manager corrects their own shift (EC-16) | Allowed, audited and flagged like any correction | ⚠️ no four-eyes rule (known limitation) |
 | Employee calls manager endpoints | `403` | ✅ tested |
 | Deactivating an employee mid-shift (EC-12) | Not built (no employee management UI) | ⏳ not done |
-| **proj2** · Missing / unknown work location (incl. `"1"`) | `400 INVALID_LOCATION`, before the time API is called; nothing saved | ✅ tested |
-| **proj2** · Client sends a time with Clock In | Ignored; the trusted clock's time is recorded | ✅ tested |
-| **proj2** · Shifts from before work location existed | Shown as "—", counted as "location —" in reports | ✅ tested |
-| **proj2** · Fix request for someone else's shift / an open shift | `404` / `409 SHIFT_STILL_OPEN` | ✅ tested |
-| **proj2** · Two fix requests for the same shift at once | Database index → exactly one; the other `409 REQUEST_ALREADY_PENDING` | ✅ tested |
-| **proj2** · Approval that would now overlap a newer shift | Refused (`409 OVERLAPS_ANOTHER_SHIFT`), request stays waiting, shift unchanged | ✅ tested |
-| **proj2** · A request approved or rejected twice | `409 REQUEST_ALREADY_DECIDED`, shift corrected once | ✅ tested |
-| **proj2** · Request moves a day / makes a shift over 14 h | Flagged for employee and manager, not blocked | ✅ unit tests + browser |
-| **proj2** · Old tab clocks out a *newer* shift | `409 SHIFT_CHANGED`, the newer shift is untouched | ✅ tested + browser (two tabs) |
-| **proj2** · Two managers correct two shifts of one employee at once | Employee lock: exactly one wins, the other gets `OVERLAPS_ANOTHER_SHIFT` | ✅ tested (fails with the lock off) |
-| **proj2** · Report: overnight shift, DST-day edges, open shifts | Same rules as history; open shifts counted separately, not in the hours | ✅ tested |
-| **proj2** · CSV: commas, quotes, a name like `=HYPERLINK(…)`, Excel encoding | Quoted, formula guard (`'`), UTF-8 BOM | ✅ tested |
-| **proj2** · Provider returns an old time that still passes validation | Not detected (only offset + "after the last Clock Out" are checked) | ⚠️ not fixed (user's decision) |
-| **proj2** · Fall-back night: one "first / second 02:30" answer applied to both corrected times; requests can't choose | Known bug, once a year, night shifts only | ⚠️ not fixed (user's decision) |
-| **proj2** · Deactivated employee with a still-valid login badge | Clock In / Out refuse it; other actions work until the badge expires (≤ 60 min) | ⚠️ fix built, then cancelled (user's decision) |
+| **Phase 2** · Missing / unknown work location (incl. `"1"`) | `400 INVALID_LOCATION`, before the time API is called; nothing saved | ✅ tested |
+| **Phase 2** · Client sends a time with Clock In | Ignored; the trusted clock's time is recorded | ✅ tested |
+| **Phase 2** · Shifts from before work location existed | Shown as "—", counted as "location —" in reports | ✅ tested |
+| **Phase 2** · Fix request for someone else's shift / an open shift | `404` / `409 SHIFT_STILL_OPEN` | ✅ tested |
+| **Phase 2** · Two fix requests for the same shift at once | Database index → exactly one; the other `409 REQUEST_ALREADY_PENDING` | ✅ tested |
+| **Phase 2** · Approval that would now overlap a newer shift | Refused (`409 OVERLAPS_ANOTHER_SHIFT`), request stays waiting, shift unchanged | ✅ tested |
+| **Phase 2** · A request approved or rejected twice | `409 REQUEST_ALREADY_DECIDED`, shift corrected once | ✅ tested |
+| **Phase 2** · Request moves a day / makes a shift over 14 h | Flagged for employee and manager, not blocked | ✅ unit tests + browser |
+| **Phase 2** · Old tab clocks out a *newer* shift | `409 SHIFT_CHANGED`, the newer shift is untouched | ✅ tested + browser (two tabs) |
+| **Phase 2** · Two managers correct two shifts of one employee at once | Employee lock: exactly one wins, the other gets `OVERLAPS_ANOTHER_SHIFT` | ✅ tested (fails with the lock off) |
+| **Phase 2** · Report: overnight shift, DST-day edges, open shifts | Same rules as history; open shifts counted separately, not in the hours | ✅ tested |
+| **Phase 2** · CSV: commas, quotes, a name like `=HYPERLINK(…)`, Excel encoding | Quoted, formula guard (`'`), UTF-8 BOM | ✅ tested |
+| **Phase 2** · Provider returns an old time that still passes validation | Not detected (only offset + "after the last Clock Out" are checked) | ⚠️ not fixed (user's decision) |
+| **Phase 2** · Fall-back night: one "first / second 02:30" answer applied to both corrected times; requests can't choose | Known bug, once a year, night shifts only | ⚠️ not fixed (user's decision) |
+| **Phase 2** · Deactivated employee with a still-valid login badge | Clock In / Out refuse it; other actions work until the badge expires (≤ 60 min) | ⚠️ fix built, then cancelled (user's decision) |
 
 ## What I chose not to do
 - **No fallback to the server clock**, even as a last resort (it would break the core rule silently).
@@ -133,14 +133,14 @@ requests, manager reports with CSV export, and safety fixes ([plans 12–15](doc
 - **No employee management screen**: employees are seeded; creating, deactivating or resetting passwords isn't built (EC-12 open).
 - **No four-eyes rule**: a manager can correct their own shift (audited and flagged, but not approved by someone else).
 - Forgotten-shift alerts are in-app only (banner + Team badge); no e-mail or push notifications.
-- No payroll rules (overtime rates, breaks); the shift list has no paging (one week at a time, max 93 days). *(proj2 added
-  a CSV export and reports.)*
-- **proj2:** an employee can't cancel their own request or ask for a whole missing day; the manager can't change a shift's
+- No payroll rules (overtime rates, breaks); the shift list has no paging (one week at a time, max 93 days). *(Phase 2
+  added a CSV export and reports.)*
+- **Phase 2:** an employee can't cancel their own request or ask for a whole missing day; the manager can't change a shift's
   location; no automated UI tests for the new screens either (checked by browser walkthroughs + unit tests for the logic).
 - **Ports are open to the local network:** Docker publishes the app, API and database ports on every network connection,
   so a device on the same Wi-Fi could reach them (the database password is a local-development one, in
-  `docker-compose.yml`). Limiting them to this computer (`127.0.0.1:` in front of each port) was considered and tested in
-  proj2; left as it is by choice: it's a local practice setup, and nothing is reachable from the internet.
+  `docker-compose.yml`). Limiting them to this computer (`127.0.0.1:` in front of each port) was considered and tested;
+  left as it is by choice: it's a local development setup, and nothing is reachable from the internet.
 
 ## Working with Claude Code
 - Rules for the AI live in [CLAUDE.md](CLAUDE.md); each big step starts with a plan in [docs/plans/](docs/plans/).
@@ -155,12 +155,13 @@ requests, manager reports with CSV export, and safety fixes ([plans 12–15](doc
   - its merge procedure (`git switch main` before merging) briefly deleted the `frontend/` folder, so Vite restarted without
     its config and the app became unreachable. Diagnosed from the container log, fixed, and the procedure changed in CLAUDE.md.
     I then pushed for a root fix: make the server *fail* rather than fall back to defaults (#35), re-tested by simulating the incident.
-- **In proj2:**
+- **In phase 2:**
   - a phone-only CSS rule hid "column 5"; the new location column took that place, so on phones it hid the location
     instead of the flags. Caught in its own browser check; the column now has a class instead of a position;
   - it first remembered the work location per device; on a shared computer that pre-selects someone else's choice (#38);
-  - it kept writing my private notes into the real project's folder (its hand-over said so). I clarified that the
-    original must stay completely untouched: the notes moved into proj2 and the real file was restored;
+  - phase 2 was built in a separate copy of the project, and it kept writing my private notes into the phase-1 folder
+    (its hand-over said so). I clarified that folder must stay completely untouched: the notes moved into the new copy
+    and the old file was restored;
   - I questioned two UI details it had missed: the AM/PM time box (#44) and the focus ring overlapping the clock button;
   - when I asked "can anyone with the link see it?", it checked and found the containers' ports were open on the whole
     Wi-Fi network (database included). Limiting them to this computer was considered and tested, and I chose to leave

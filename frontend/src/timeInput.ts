@@ -1,4 +1,4 @@
-// 24-hour time entry (proj2). The browser's built-in date-and-time box follows the computer's region settings and can
+// 24-hour time entry (Plan 13d). The browser's built-in date-and-time box follows the computer's region settings and can
 // show "05:00 PM", while the rest of the app shows "17:00". So the time is a plain 24-hour field (type it, or pick it
 // from the hour/minute roller), and only the DATE uses the browser's calendar picker.
 

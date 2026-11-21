@@ -1,10 +1,10 @@
-# Plan 12 (proj2): Work location (Office / Remote)
+# Plan 12 (phase 2): Work location (Office / Remote)
 
 **Status:** done ✅ (approved 2026-11-20) · **Branch:** `feature/work-location` (cut from `feature/recent-shifts`)
 
 ## Why
 Managers want to know *where* a shift was worked. The employee picks **Office** or **Remote** before Clock In; the choice
-is saved with that shift and shown everywhere shifts appear. It's also the first proj2 feature that goes through **every
+is saved with that shift and shown everywhere shifts appear. It's also the first phase-2 feature that goes through **every
 layer** (screen → request → validation → database → DTOs → screens → tests), so it's the practice run for bigger features.
 
 ## What changes, layer by layer
@@ -74,4 +74,4 @@ Next API start applies the migration automatically (Development).
 
 **Not done**
 - The manager can't change a shift's location (planned for the correction-requests feature).
-- docs/TESTS.md, DECISIONS.md and README describe the submitted project and weren't updated in proj2.
+- docs/TESTS.md, DECISIONS.md and README were brought up to date later (21 Nov).

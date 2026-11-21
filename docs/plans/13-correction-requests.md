@@ -1,4 +1,4 @@
-# Plan 13 (proj2): Employee correction requests + manager approve / reject
+# Plan 13 (phase 2): Employee correction requests + manager approve / reject
 
 **Status:** done ✅ (approved 2026-11-20 with two changes: closed shifts only; reject without a note) · **Branch:** `feature/correction-requests` · **PRD refs:** N3, F6, rule 2, EC-13
 
@@ -103,7 +103,7 @@ from the time API exists only as an explicit, audited manager correction.
   ("would overlap another shift"), as designed. Both requests left pending for the user.
 
 **Not done (as agreed):** cancelling your own request, requests for a missing day, changing the location by request,
-notifications. docs/TESTS.md, DECISIONS.md and README describe the submitted project and weren't updated in proj2.
+notifications. docs/TESTS.md, DECISIONS.md and README were brought up to date later (21 Nov).
 
 ### 13d: 24-hour time entry with an hour/minute roller (2026-11-20, user's request)
 **Why:** the browser's built-in date-and-time box follows the computer's region settings, so it showed "05:00 PM" while

@@ -2,25 +2,24 @@
 
 Guidance for Claude Code when working in this repository.
 
-## ⚠️ THIS IS "proj2", THE PLAYGROUND COPY (read first)
-This folder (`…\שעון\tamir-playground`) is a **practice copy** of the submitted project. The user calls it **proj2** and
-uses it to add features and learn how frontend, backend and database connect. See [PLAYGROUND.md](PLAYGROUND.md).
+## ⚠️ Read first: phase 2 and this folder
+The project was built in two phases. **Phase 1** (plans 01–11) is the core the assignment asks for; it was finished,
+verified from a fresh clone, and kept as a snapshot in a separate folder. **Phase 2** (plans 12–15) adds extensions on top,
+in **this** folder (`…\שעון\tamir-playground`, which the user also calls "proj2"). This folder is **the project now**.
 
-- **Never touch the real project** in `…\שעון\tamir` (the submission, pushed to GitHub), **including the user's private
-  files there**. Don't read from or write to it at all. proj2 is a **complete copy**: since 2026-11-21 it has its own
-  copies of the private files (below), and every change, notes included, happens here.
-- **Ports here:** app **5175**, API **5081**, DB **1434**. Containers `playground-db/-api/-web`. The rest of this file
-  still says 5174/5080/1433 (the original's): in proj2, use the ports above. README, DECISIONS (#37–#48), docs/TESTS,
-  WORKING-WITH-CLAUDE and TECH-STACK were updated for proj2 on 2026-11-21.
-- **GitHub (since 2026-11-21):** remote `origin` = https://github.com/AdielGuetta/Attendance_Clock (**public**); the local
-  `playground` branch is pushed as its `main` (`git push origin playground:main`). Push **only with the user's OK**, and
-  never push other branches or tags. Work on a branch per feature (`feature/…`), commit with the usual style; merge into
-  `playground` only with the user's OK (`git branch -f playground HEAD && git switch playground`).
+- **Never touch the phase-1 folder** `…\שעון\tamir` (and its repo, AdielGuetta/AttendanceClock), **including the user's
+  private files there**. Don't read from or write to it at all. Everything, notes included, happens here.
+- **Ports:** app **5175**, API **5081**, DB **1434** (on this computer; inside Docker the web and API still listen on 5174 /
+  5080). Containers: `attendance-clock-db`, `attendance-clock-api`, `attendance-clock-web`.
+- **GitHub:** remote `origin` = https://github.com/AdielGuetta/Attendance_Clock (**public**); local `main` = GitHub `main`.
+  Push **only with the user's OK**, and never push other branches or tags. Work on a branch per feature (`feature/…`),
+  commit with the usual style; merge into `main` only with the user's OK (see "Git workflow" below). The local branch
+  `phase1` is the phase-1 history; it's already part of `main`'s history.
 - **Never commit the private files** (`ADI-NOTE.md`, `INTERVIEW-NOTES.md`, `ADI-SYSTEM-MAP.*`, `SESSION-HANDOFF.md`): they're
-  in `.git/info/exclude`. SESSION-HANDOFF.md was removed from the history before the first push (it named the company
-  and a local path); the old history is only in the local tag `backup/playground-before-rewrite` (never push it).
-- **Done so far in proj2:** "Recent shifts" box on the Clock screen (`frontend/src/recent.ts`, `screens/RecentShifts.tsx`),
-  merged into `playground`. **Work location** (Plan 12, branch `feature/work-location`): `Shifts.WorkLocation` (NULL for
+  in `.git/info/exclude`. SESSION-HANDOFF.md was taken out of the history before the first push; the old history is only
+  in the local tag `backup/playground-before-rewrite` (never push it).
+- **Done in phase 2:** "Recent shifts" box on the Clock screen (`frontend/src/recent.ts`, `screens/RecentShifts.tsx`).
+  **Work location** (Plan 12, branch `feature/work-location`): `Shifts.WorkLocation` (NULL for
   old shifts), Clock In body `{ location }` → 400 `INVALID_LOCATION`, `Punches/ClockInRequest.cs`, `frontend/src/location.ts`.
   **Correction requests** (Plan 13, branch `feature/correction-requests`, on top of work location): table
   `CorrectionRequests` (one pending per shift), `backend/…/Requests/`, approve = `AdminService.CorrectAsync` in a
@@ -41,18 +40,19 @@ uses it to add features and learn how frontend, backend and database connect. Se
   Skip: profile photos, "online in the last 2 minutes".
 
 ### The user's private files (in THIS folder, never in git)
-They're kept out of git by `.git/info/exclude` (a local-only ignore list, same as in the real project), so they never
-show in `git status` and could never be uploaded. Don't move them into `.gitignore` or commit them.
-- `ADI-NOTE.md` (proj2 root): after answering **any genuine question** from the user, add it under the right topic with a
+They're kept out of git by `.git/info/exclude` (a local-only ignore list), so they never show in `git status` and could
+never be uploaded. Don't move them into `.gitignore` or commit them.
+- `ADI-NOTE.md` (root): after answering **any genuine question** from the user, add it under the right topic with a
   1–2 sentence answer. Keep numbers sequential (renumber the following questions and the glossary "More" refs if needed);
   add new key terms to the glossary. Edit it with the Edit tool only (never PowerShell Get-Content/Set-Content).
-- `INTERVIEW-NOTES.md` (proj2 root): optional entries for notable lessons (What / Why / "Say").
-- `ADI-SYSTEM-MAP.html` / `.pdf` (proj2 root): the user's system diagram; it still shows the original project only.
+- `INTERVIEW-NOTES.md` (root): optional entries for notable lessons (What / Why / "Say").
+- `ADI-SYSTEM-MAP.html` / `.pdf` / `.svg` (root): the user's system diagram (phase 2 parts marked NEW); the `.svg` is
+  page 1, shown at the top of ADI-NOTE. Re-print the PDF with headless Edge when the HTML changes.
 
 ### How to work with this user (same as always)
 The user is new to programming and is preparing for an interview. One step at a time: explain *what* and *why* in a few
 plain sentences (a kitchen or warehouse metaphor when it truly fits), **ask before acting**, show proof after each step
-(tests + a browser check on http://localhost:5174 → **5175** here), and say what's not done.
+(tests + a browser check on http://localhost:5175), and say what's not done.
 
 ## Project
 **Attendance Clock**: employees clock in and out of shifts; managers review and correct shifts.
@@ -73,10 +73,10 @@ Windows **Smart App Control** on the dev machine blocks every locally built .NET
 turned off. **Never run `dotnet build/run/test/ef` on Windows.** Run them in the Docker container.
 
 ```bash
-docker compose up -d                 # start SQL Server (attendance-db) + API (attendance-api, dotnet watch) + web (attendance-web, Vite)
+docker compose up -d                 # start SQL Server (attendance-clock-db) + API (attendance-clock-api, dotnet watch) + web (attendance-clock-web, Vite)
 docker compose down                  # stop (data kept); add -v to wipe the database
-curl http://localhost:5080/health    # "Healthy" = API up and database reachable
-docker logs attendance-api --tail 50
+curl http://localhost:5081/health    # "Healthy" = API up and database reachable
+docker logs attendance-clock-api --tail 50
 
 # One-off .NET commands: stop the watcher first so two builds don't collide
 docker compose stop api
@@ -86,7 +86,7 @@ docker compose start api
 - Run backend tests: `docker compose run --rm tests` (a separate container with its own bin/obj volumes, profile `tests`),
   so the running API is **not** stopped. Use the stop/run/start pattern above only for `dotnet ef` and `dotnet add package`.
 - Frontend: never run `npm`/`vite` on Windows either (esbuild is unsigned). Use the web container:
-  `docker exec attendance-web sh -c "npx tsc -b && npx vitest run"`. Port **5174** (5173 is taken by another local project).
+  `docker exec attendance-clock-web sh -c "npx tsc -b && npx vitest run"`. Port **5175** on this computer (5174 inside the container; 5173 is often taken).
 - Add a migration: `dotnet ef migrations add <Name> --project AttendanceClock.Api --output-dir Data/Migrations`.
   Migrations are applied automatically when the API starts in Development.
 - NuGet: pin **10.0.x** versions. Plain `dotnet add package` picks 11.x, which doesn't support net10.0.
@@ -94,13 +94,13 @@ docker compose start api
 
 ### Gotchas
 - **sqlcmd** needs `-I` (QUOTED_IDENTIFIER ON), or inserts fail because of the filtered unique index. Example:
-  `docker exec -i attendance-db sh -c '/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -I -d AttendanceClock'`
+  `docker exec -i attendance-clock-db sh -c '/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -I -d AttendanceClock'`
 - **Git Bash** rewrites `/opt/...` paths passed to `docker exec`. Prefix the command with `MSYS_NO_PATHCONV=1`.
 - The repo path contains Hebrew characters (`שעון`). Always quote paths.
 - **Windows PowerShell 5.1** reads UTF-8 files as ANSI by default and garbles `·`, `→`, `✅`. Don't edit files through
   `Get-Content`/`Set-Content`; use the Edit/Write tools (or `sed` in Git Bash).
 - Integration tests use a separate database, `AttendanceClock_Tests`, deleted and recreated on every run (`ApiFactory`).
-- If the API container can't reach nuget.org right after `up`, it's a transient DNS hiccup: `docker restart attendance-api`.
+- If the API container can't reach nuget.org right after `up`, it's a transient DNS hiccup: `docker restart attendance-clock-api`.
 
 ## Code layout
 ```
@@ -125,7 +125,7 @@ backend/
   AttendanceClock.Tests/             # xUnit. Time/: fake HTTP handler. Auth/, Punches/, History/, Admin/: real app in memory (ApiFactory) + test DB.
                                      # Punches/ swaps ITrustedClock for FakeTrustedClock (tests only!). DB test classes use
                                      # [Collection(DatabaseCollection.Name)] so they never run in parallel.
-frontend/                            # React 19 + Vite 8 + TypeScript 5.9 (container attendance-web, http://localhost:5174)
+frontend/                            # React 19 + Vite 8 + TypeScript 5.9 (container attendance-clock-web, http://localhost:5175)
   vite.config.ts                     # dev server on 5174; proxies /api → http://api:5080 (no CORS)
   src/api.ts                         # all server calls + ApiError (ProblemDetails "code"); 401 → back to login
   src/session.ts                     # login badge in localStorage

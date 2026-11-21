@@ -1,12 +1,14 @@
-# Attendance Clock (proj2)
-
-> **This is proj2, the practice copy.** It started as an exact copy of the submitted project and adds features on top:
-> **work location**, **employee correction requests**, **manager reports with CSV export**, and a few safety fixes.
-> It runs next to the original with its own containers (`playground-*`), its own database and its own ports
-> (**app 5175 · API 5081 · DB 1434**). The submitted version is a separate repo,
-> [AdielGuetta/AttendanceClock](https://github.com/AdielGuetta/AttendanceClock). See [PLAYGROUND.md](PLAYGROUND.md).
+# Attendance Clock
 
 An attendance system where employees **clock in and out** of shifts, and managers review and correct them.
+
+**Built in two phases:**
+- **Phase 1, the core** the assignment asks for: punch times from an external time API, Clock In / Out, history and
+  totals, manager corrections with an audit trail, forgotten-shift alerts.
+- **Phase 2, extensions on top:** work location (Office / Remote), employee correction requests that a manager approves
+  or rejects, manager reports with CSV export, and two safety fixes found in an edge-case review.
+
+Every step has a plan with its results in [docs/plans/](docs/plans/) (01–11 phase 1, 12–15 phase 2).
 
 **The core rule:** every Clock In / Clock Out time comes from an **external time API, in Europe/Zurich time**, never from
 the browser's or the server's clock. If the time service is unavailable, the punch is refused rather than recorded with a
@@ -21,10 +23,10 @@ time we can't trust.
 - The **database itself** guarantees one open shift per employee: 10 simultaneous clicks → exactly 1 shift (tested).
 - DST-safe everywhere: a night shift when clocks jump forward counts 7 h, not 8.
 - Manager corrections need a **reason** and leave an **append-only audit trail**; forgotten shifts are alerted, never auto-closed.
-- **proj2:** employees pick **Office / Remote** before Clock In; they can **ask for a fix** on a finished shift, which a
+- **Phase 2:** employees pick **Office / Remote** before Clock In; they can **ask for a fix** on a finished shift, which a
   manager approves (as an audited correction) or rejects; managers get **Reports** (tiles, per employee, per day) and a
   **CSV** file. Changes for one employee are handled **one at a time** (a lock), and an old browser tab can't close a newer shift.
-- **95 backend + 35 frontend automated tests** (the submitted version had 58 + 13); one command starts everything.
+- **95 backend + 35 frontend automated tests** (phase 1 had 58 + 13); one command starts everything.
 
 ---
 
@@ -37,7 +39,7 @@ time we can't trust.
 | Time source | [timeapi.io](https://timeapi.io) (primary), [time.now](https://time.now) (backup) |
 | Local environment | Docker Compose |
 
-proj2 added **no new libraries or services**: every feature is built with the same stack.
+Phase 2 added **no new libraries or services**: every feature is built with the same stack.
 
 ## Run it locally
 
@@ -92,14 +94,14 @@ Manager only (log in as `manager`): `GET /api/admin/on-shift`, `GET /api/admin/s
 `GET /api/admin/reports?from=&to=&employeeId=` and `GET /api/admin/reports/export?from=&to=&employeeId=` (CSV file).
 
 **Database setup is automatic:** SQL Server runs in a container, and the server creates and upgrades the tables on
-startup (EF Core migrations, including proj2's `AddWorkLocation` and `AddCorrectionRequests`). There are no manual steps.
+startup (EF Core migrations, including phase 2's `AddWorkLocation` and `AddCorrectionRequests`). There are no manual steps.
 
 Stop with `docker compose down` (data is kept), or `docker compose down -v` to also delete the database.
 
 ### Run the tests
 ```bash
 docker compose run --rm tests                                         # backend: 95 tests
-docker exec playground-web sh -c "npx tsc -b && npx vitest run"       # frontend: 35 tests (+ type-check)
+docker exec attendance-clock-web sh -c "npx tsc -b && npx vitest run"       # frontend: 35 tests (+ type-check)
 ```
 
 ### Without Docker *(alternative, any OS)*
@@ -119,8 +121,8 @@ Your computer (Windows / macOS / Linux)
 │  browser → http://localhost:5175                      localhost:1434 (optional: SSMS, Azure Data Studio…)
 │                │                                            │
 │  ┌─ Docker ────┼────────────────────────────────────────────┼─────────────────────┐
-│  │  playground-web            playground-api                ▼                     │
-│  │  image: Node 24   "api:5080"  image: .NET 10 SDK  "db:1433"  playground-db     │
+│  │  attendance-clock-web      attendance-clock-api          ▼                     │
+│  │  image: Node 24   "api:5080"  image: .NET 10 SDK  "db:1433"  attendance-clock-db│
 │  │  runs: Vite  ─── /api/* ──►  runs: dotnet watch  ────────►  image: SQL Server   │
 │  │  code: ./frontend (live)     code: ./backend (live)          data: volume db-data│
 │  └─────────────────────────────────────────────────────────────────────────────────┘
@@ -142,9 +144,9 @@ Your computer (Windows / macOS / Linux)
 - **Data survives restarts.** It lives in the `db-data` *volume*, a storage area managed by Docker. Only
   `docker compose down -v` deletes it.
 - **Ports** connect your computer to the containers: `5175` → the app, `5081` → the API, `1434` → SQL Server. They differ
-  from the original project's (5174 / 5080 / 1433), so both can run at the same time.
+  from the usual defaults (5173 / 5080 / 1433), which other local projects often occupy.
 - **Build output** (`bin/`, `obj/`) stays inside Docker volumes, so it never mixes with your own OS's files.
-- Useful commands: `docker compose ps` (status) · `docker logs playground-api --tail 50` (API log) ·
+- Useful commands: `docker compose ps` (status) · `docker logs attendance-clock-api --tail 50` (API log) ·
   `docker compose restart api`. Docker Desktop shows the same in its **Containers** tab.
 
 ### macOS and Linux notes
@@ -172,22 +174,21 @@ Your computer (Windows / macOS / Linux)
 | React UI (employee): login, Clock In/Out, My week, phone-friendly | ✅ |
 | Manager: who's on shift, all shifts, corrections with reason + audit trail, 15 tests | ✅ |
 | Forgotten-shift alerts (> 14 h): employee banner + manager badge | ✅ |
-| Final polish: fresh-clone test (clean DB, all tests green), docs review | ✅ (submitted version) |
-| **proj2** · Recent shifts on the Clock screen (warm-up, reuses history) | ✅ |
-| **proj2** · Work location: Office / Remote per shift, new column + rule, shown everywhere, 9 tests ([plan 12](docs/plans/12-work-location.md)) | ✅ |
-| **proj2** · Correction requests: ask on a finished shift, manager approves (audited) / rejects, 18 tests ([plan 13](docs/plans/13-correction-requests.md)) | ✅ |
-| **proj2** · Length / moved-day warnings, 24-hour time box with an hour/minute roller (screens only) | ✅ |
-| **proj2** · Safety fixes: old tab can't close a newer shift, one change per employee at a time, 3 tests ([plan 14](docs/plans/14-safety-fixes.md)) | ✅ |
-| **proj2** · Manager reports: tiles, per employee, per day, CSV export, 7 + 4 tests ([plan 15](docs/plans/15-manager-reports.md)) | ✅ |
-| **proj2** · Employees tab with search, greeting, design refresh | ⏭️ skipped (low value) |
+| Final polish: fresh-clone test (clean DB, all tests green), docs review | ✅ (end of phase 1) |
+| **Phase 2** · Recent shifts on the Clock screen (warm-up, reuses history) | ✅ |
+| **Phase 2** · Work location: Office / Remote per shift, new column + rule, shown everywhere, 9 tests ([plan 12](docs/plans/12-work-location.md)) | ✅ |
+| **Phase 2** · Correction requests: ask on a finished shift, manager approves (audited) / rejects, 18 tests ([plan 13](docs/plans/13-correction-requests.md)) | ✅ |
+| **Phase 2** · Length / moved-day warnings, 24-hour time box with an hour/minute roller (screens only) | ✅ |
+| **Phase 2** · Safety fixes: old tab can't close a newer shift, one change per employee at a time, 3 tests ([plan 14](docs/plans/14-safety-fixes.md)) | ✅ |
+| **Phase 2** · Manager reports: tiles, per employee, per day, CSV export, 7 + 4 tests ([plan 15](docs/plans/15-manager-reports.md)) | ✅ |
+| **Phase 2** · Employees tab with search, greeting, design refresh | ⏭️ skipped (low value) |
 
 ## Documentation
-- [PLAYGROUND.md](PLAYGROUND.md): what proj2 is and how it differs from the original
-- [docs/PRD.md](docs/PRD.md): requirements, edge cases and design (proj2 changes are marked "Plan 12–15 (proj2)")
+- [docs/PRD.md](docs/PRD.md): requirements, edge cases and design (phase 2 changes are marked "Plan 12–15 (phase 2)")
 - [DECISIONS.md](DECISIONS.md): key decisions, edge cases, what was left out, known limitations
 - [docs/TECH-STACK.md](docs/TECH-STACK.md): pros and cons of each component, and how each affects the user experience.
   **Visual version:** [docs/TECH-STACK.pdf](docs/TECH-STACK.pdf) (diagrams: architecture, Clock In flow, waiting time, concurrency, Docker)
 - [docs/TESTS.md](docs/TESTS.md): every edge case (מקרי קצה), how it's handled, and which automated test proves it
-- [docs/plans/](docs/plans/): the plan for each step, with its results (12–15 are proj2)
+- [docs/plans/](docs/plans/): the plan for each step, with its results (12–15 are phase 2)
 - [docs/WORKING-WITH-CLAUDE.md](docs/WORKING-WITH-CLAUDE.md): the process, where Claude Code helped, and where it had to be corrected
 - [CLAUDE.md](CLAUDE.md) and [.claude/](.claude/): the instructions and project commands Claude Code worked with

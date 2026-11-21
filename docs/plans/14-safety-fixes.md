@@ -1,8 +1,8 @@
-# Plan 14 (proj2): Safety fixes from the edge-case review
+# Plan 14 (phase 2): Safety fixes from the edge-case review
 
 **Status:** done ✅ (approved 2026-11-20; fix 7 built, then cancelled by the user) · **Branch:** `feature/safety-fixes`
 
-The user listed edge cases; each was checked in the code (answers in ADI-NOTE Q42–Q48). Decisions:
+The user listed edge cases; each was checked against the actual code. Decisions:
 
 | # | Case | Decision |
 |---|---|---|

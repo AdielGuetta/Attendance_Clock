@@ -1,4 +1,4 @@
-// Work location (Plan 12, proj2): Office or Remote, chosen before Clock In and stored with the shift.
+// Work location (Plan 12): Office or Remote, chosen before Clock In and stored with the shift.
 // Kept apart from the screens so it's easy to test.
 
 export type WorkLocation = "Office" | "Remote";

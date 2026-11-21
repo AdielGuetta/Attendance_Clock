@@ -235,6 +235,6 @@ textarea { font: inherit; padding: 10px 12px; border-radius: 10px; border: 1px s
   .day { grid-template-columns: 78px 1fr 48px; padding: 10px 12px; }
 }
 
-/* proj2: Recent shifts box on the Clock screen */
+/* Phase 2: Recent shifts box on the Clock screen */
 .recent { width: 100%; max-width: 560px; text-align: left; }
 .recent .panel-head h2 { text-align: left; }

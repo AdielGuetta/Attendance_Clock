@@ -1,6 +1,6 @@
-# Plan 15 (proj2): Manager reports + CSV export
+# Plan 15 (phase 2): Manager reports + CSV export
 
-**Status:** done ✅ (approved 2026-11-20) · **Branch:** `feature/manager-reports` (from `playground`)
+**Status:** done ✅ (approved 2026-11-20) · **Branch:** `feature/manager-reports`
 
 ## Why
 Managers need answers like "how many hours did the team work in November?", "who worked remotely?", "which shifts

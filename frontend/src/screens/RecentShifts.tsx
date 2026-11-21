@@ -7,7 +7,7 @@ import { formatDay, formatHM, parseServerTime } from "../time";
 const FLAG_LABELS: Record<string, string> = { TooLong: "Over 14 h", Corrected: "Corrected by manager" };
 
 /**
- * "Recent shifts" on the Clock screen (proj2 warm-up).
+ * "Recent shifts" on the Clock screen (phase 2 warm-up).
  * Uses the EXISTING history endpoint (GET /api/shifts/mine?from=&to=), so no backend change was needed.
  * `refreshKey` changes after every punch, which makes this box load again.
  */
