@@ -12,8 +12,13 @@ uses it to add features and learn how frontend, backend and database connect. Se
 - **Ports here:** app **5175**, API **5081**, DB **1434**. Containers `playground-db/-api/-web`. The rest of this file
   still says 5174/5080/1433 (the original's): in proj2, use the ports above. README, DECISIONS (#37–#48), docs/TESTS,
   WORKING-WITH-CLAUDE and TECH-STACK were updated for proj2 on 2026-11-21.
-- **No git remote**: never add one, never push. Work on a branch per feature (`feature/…`), commit with the usual style;
-  merge into the `playground` branch only with the user's OK (`git branch -f playground HEAD && git switch playground`).
+- **GitHub (since 2026-11-21):** remote `origin` = https://github.com/AdielGuetta/Attendance_Clock (**public**); the local
+  `playground` branch is pushed as its `main` (`git push origin playground:main`). Push **only with the user's OK**, and
+  never push other branches or tags. Work on a branch per feature (`feature/…`), commit with the usual style; merge into
+  `playground` only with the user's OK (`git branch -f playground HEAD && git switch playground`).
+- **Never commit the private files** (`ADI-NOTE.md`, `INTERVIEW-NOTES.md`, `ADI-SYSTEM-MAP.*`, `SESSION-HANDOFF.md`): they're
+  in `.git/info/exclude`. SESSION-HANDOFF.md was removed from the history before the first push (it named the company
+  and a local path); the old history is only in the local tag `backup/playground-before-rewrite` (never push it).
 - **Done so far in proj2:** "Recent shifts" box on the Clock screen (`frontend/src/recent.ts`, `screens/RecentShifts.tsx`),
   merged into `playground`. **Work location** (Plan 12, branch `feature/work-location`): `Shifts.WorkLocation` (NULL for
   old shifts), Clock In body `{ location }` → 400 `INVALID_LOCATION`, `Punches/ClockInRequest.cs`, `frontend/src/location.ts`.

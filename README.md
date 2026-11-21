@@ -3,7 +3,8 @@
 > **This is proj2, the practice copy.** It started as an exact copy of the submitted project and adds features on top:
 > **work location**, **employee correction requests**, **manager reports with CSV export**, and a few safety fixes.
 > It runs next to the original with its own containers (`playground-*`), its own database and its own ports
-> (**app 5175 · API 5081 · DB 1434**), and it has **no GitHub remote**. See [PLAYGROUND.md](PLAYGROUND.md).
+> (**app 5175 · API 5081 · DB 1434**). The submitted version is a separate repo,
+> [AdielGuetta/AttendanceClock](https://github.com/AdielGuetta/AttendanceClock). See [PLAYGROUND.md](PLAYGROUND.md).
 
 An attendance system where employees **clock in and out** of shifts, and managers review and correct them.
 
@@ -48,9 +49,9 @@ proj2 added **no new libraries or services**: every feature is built with the sa
 | macOS (Intel or Apple Silicon) | [Docker Desktop](https://www.docker.com/products/docker-desktop/). On Apple Silicon, SQL Server runs under emulation; see [notes](#macos-and-linux-notes) |
 | Linux | [Docker Engine](https://docs.docker.com/engine/install/) + the [Compose plugin](https://docs.docker.com/compose/install/linux/) (or Docker Desktop) |
 
-proj2 lives only in its folder on this computer (no GitHub remote). From that folder:
-
 ```bash
+git clone https://github.com/AdielGuetta/Attendance_Clock.git
+cd Attendance_Clock
 docker compose up -d
 ```
 
